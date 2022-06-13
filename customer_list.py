@@ -71,10 +71,10 @@ import PIL.Image
 
 
 # ##########################################################################################################
-# fbilldb = mysql.connector.connect(
-#     host="localhost", user="root", password="", database="fbillingsintgrtd", port="3306"
-# )
-# fbcursor = fbilldb.cursor()
+fbilldb = mysql.connector.connect(
+    host="localhost", user="root", password="", database="fbilling", port="3306"
+)
+fbcursor = fbilldb.cursor()
 ##########################################################################################################
 def reset():
   global root
@@ -269,30 +269,44 @@ cus_flt.place(x=1210, y=75)
 cus_flt["values"]=("Default")
 cus_flt.current(0)
 
-cus_main_s=ttk.Style()
-cus_main_s.configure('Treeview.Heading',background='white')
-cus_main_tree=ttk.Treeview(tab7,selectmode='browse')
-cus_main_tree.place(x=0,y=95,height=280)
-cus_main_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
-cus_main_vertical_bar.place(x=1083,y=95,height=280)
-cus_main_tree["columns"]=("1","2","3","4","5","6","7","8")
-cus_main_tree["show"]='headings'
-cus_main_tree.column("1",width=30,anchor='c')
-cus_main_tree.column("2",width=140,anchor='c')
-cus_main_tree.column("3",width=190,anchor='c')
-cus_main_tree.column("4",width=176,anchor='c')
-cus_main_tree.column("5",width=176,anchor='c')
-cus_main_tree.column("6",width=120,anchor='c')
-cus_main_tree.column("7",width=130,anchor='c')
-cus_main_tree.column("8",width=120,anchor='c')
-cus_main_tree.heading("1",text="")
-cus_main_tree.heading("2",text="Customer ID")
-cus_main_tree.heading("3",text="Category")
-cus_main_tree.heading("4",text="Customer Name")
-cus_main_tree.heading("5",text="Contact Persion")
-cus_main_tree.heading("6",text="Customer Tel.")
-cus_main_tree.heading("7",text="SMS Number")
-cus_main_tree.heading("8",text="Type")
+
+
+def main():
+  global cus_main_tree
+  cus_main_s=ttk.Style()
+  cus_main_s.configure('Treeview.Heading',background='white')
+  cus_main_tree=ttk.Treeview(tab7,selectmode='browse')
+  cus_main_tree.place(x=0,y=95,height=280)
+  cus_main_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+  cus_main_vertical_bar.place(x=1083,y=95,height=280)
+  cus_main_tree["columns"]=("1","2","3","4","5","6","7","8")
+  cus_main_tree["show"]='headings'
+  cus_main_tree.column("1",width=30,anchor='c')
+  cus_main_tree.column("2",width=140,anchor='c')
+  cus_main_tree.column("3",width=190,anchor='c')
+  cus_main_tree.column("4",width=176,anchor='c')
+  cus_main_tree.column("5",width=176,anchor='c')
+  cus_main_tree.column("6",width=120,anchor='c')
+  cus_main_tree.column("7",width=130,anchor='c')
+  cus_main_tree.column("8",width=120,anchor='c')
+  cus_main_tree.heading("1",text="")
+  cus_main_tree.heading("2",text="Customer ID")
+  cus_main_tree.heading("3",text="Category")
+  cus_main_tree.heading("4",text="Customer Name")
+  cus_main_tree.heading("5",text="Contact Persion")
+  cus_main_tree.heading("6",text="Customer Tel.")
+  cus_main_tree.heading("7",text="SMS Number")
+  cus_main_tree.heading("8",text="Type")
+
+  cus_main_table_sql="select * from customer"
+  fbcursor.execute(cus_main_table_sql)
+  main_tb_val=fbcursor.fetchall()
+  count_cus=0
+  for i in main_tb_val:
+    cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[4],i[8],i[10],i[12],i[22]))
+    count_cus +=1
+
+main()
 
 # cus_s=ttk.Style()
 # cus_s.configure('Treeview.Heading',background='white')
@@ -731,208 +745,450 @@ def cus_addemail_order():
           cus_pswrdent.place(x=195, y=40)
 #------------------------------------------------------------------------------------Add Customer
 def cus_add_customer():
-    add_customer = Toplevel()  
-    add_customer.title("Add new Customer ")
-    p2 = PhotoImage(file = "images/fbicon.png")
-    add_customer.iconphoto(False, p2)
-    add_customer.geometry("775x580+300+100")
-    Labelframe1=LabelFrame(add_customer,text="Customer")
-    Labelframe1.place(x=10,y=10,width=755,height=525)
-    a1=Label(Labelframe1,text="Customer ID:",fg="Blue")
-    a2=Label(Labelframe1,text="Category:")
-    a3=Label(Labelframe1,text="Status :")
-    a3.place(x=620,y=7)
-    b1=Entry(Labelframe1)
-    ca=StringVar() 
-    b2=ttk.Combobox(Labelframe1,textvariable = ca )    
-    b2['values'] = ('Default')  
-    b2.place(x=390,y=220) 
-    b2.current(0)
-    a1.place(x=10,y=7)
-    a2.place(x=330,y=7)   
-    b1.place(x=120,y=7,width=200)
-    b2.place(x=390,y=7,width=220)
-    checkvar1 = IntVar()
-    chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = checkvar1, onvalue = 0, offvalue = 1)
-    chkbtn1.place(x=670,y=6)
-    Labelframe2=LabelFrame(Labelframe1,text="Invoice to (appears on invoice)")
-    Labelframe2.place(x=10,y=35,width=340,height=125)
-    a1=Label(Labelframe2,text="Business Name:",fg="Blue").place(x=10,y=10)
-    a2=Label(Labelframe2,text="Address:",fg="Blue").place(x=10,y=35)
-    b1=Entry(Labelframe2).place(x=110,y=10,width=210)
-    b2=Entry(Labelframe2).place(x=110,y=35,width=210,height=63)  
-    btn110=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=85,height=20)
-    Labelframe3=LabelFrame(Labelframe1,text="Ship to (appears on invoice)")
-    Labelframe3.place(x=400,y=35,width=340,height=125)
-    a11=Label(Labelframe3,text="Ship to Name:").place(x=10,y=10)
-    a21=Label(Labelframe3,text="Address:").place(x=10,y=35)
-    b11=Entry(Labelframe3).place(x=110,y=10,width=210)
-    b21=Entry(Labelframe3).place(x=110,y=35,width=210,height=63)
-    Labelframe4=LabelFrame(Labelframe1,text="Contact")
-    Labelframe4.place(x=10,y=170,width=340,height=137)
-    a11=Label(Labelframe4,text="Contact Person:").place(x=10,y=10)
-    a21=Label(Labelframe4,text="Email Address:",fg="Blue").place(x=10,y=35)
-    a31=Label(Labelframe4,text="Tel. No:").place(x=10,y=60)
-    a41=Label(Labelframe4,text="Fax:").place(x=200,y=60)
-    a51=Label(Labelframe4,text="Mobile number for SMS notification:").place(x=10,y=85)
-    b11=Entry(Labelframe4).place(x=110,y=10,width=210)
-    b21=Entry(Labelframe4).place(x=110,y=35,width=210)
-    b31=Entry(Labelframe4).place(x=110,y=60,width=90)
-    b41=Entry(Labelframe4).place(x=230,y=60,width=90)
-    b51=Entry(Labelframe4).place(x=215,y=85,width=105)
-    btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
-    Labelframe5=LabelFrame(Labelframe1,text="Ship To Contact")
-    Labelframe5.place(x=400,y=170,width=340,height=108)
-    a11=Label(Labelframe5,text="Contact Person:").place(x=10,y=10)
-    a21=Label(Labelframe5,text="Email Address:").place(x=10,y=35)
-    a31=Label(Labelframe5,text="Tel. No:").place(x=10,y=60)
-    a41=Label(Labelframe5,text="Fax:").place(x=200,y=60)
-    b11=Entry(Labelframe5).place(x=110,y=10,width=210)
-    b21=Entry(Labelframe5).place(x=110,y=35,width=210)
-    b31=Entry(Labelframe5).place(x=110,y=60,width=90)
-    b41=Entry(Labelframe5).place(x=230,y=60,width=90)
-    Labelframe6=LabelFrame(Labelframe1,text="Payment Option")
-    Labelframe6.place(x=10,y=317,width=340,height=80)
-    checkvar1 = IntVar()
-    chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = checkvar1, onvalue = 1, offvalue = 0, font=("arial", 8))
-    chkbtn1.place(x=10,y=6)
-    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-    a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
-    b11val = IntVar(Labelframe6, value='0')
-    b11=Entry(Labelframe6).place(x=250,y=7,width=70)
-    b12=Entry(Labelframe6,textvariable=b11val).place(x=80,y=30,width=70)
-    Labelframe7=LabelFrame(Labelframe1,text="Customer type")
-    Labelframe7.place(x=10,y=405,width=340,height=90)
-    i=IntVar()
-    r1=Radiobutton(Labelframe7, text = "Client", variable = i, value = 1).place(x=5,y=15)
-    r2=Radiobutton(Labelframe7, text = "Vender", variable = i, value = 2).place(x=90,y=15)
-    r3=Radiobutton(Labelframe7, text = "Both(Client/Vender)", variable = i, value = 3).place(x=180,y=15)
-    Labelframe8=LabelFrame(Labelframe1,text="Additional Info")
-    Labelframe8.place(x=400,y=288,width=340,height=80)
-    a11=Label(Labelframe8,text="Country:").place(x=10,y=5)
-    a12=Label(Labelframe8,text="City:").place(x=10,y=30)
-    c=StringVar() 
-    b11=ttk.Combobox(Labelframe8,textvariable=c)
-    b11.place(x=110,y=5,width=210)
-    b11['values'] = ('India','America')    
-    b11.place(x=110,y=5) 
-    b12=Entry(Labelframe8).place(x=110,y=30,width=210)
-    Labelframe9=LabelFrame(Labelframe1,text="Notes")
-    Labelframe9.place(x=400,y=380,width=340,height=115)
-    '''scrollbar = Scrollbar(Labelframe9)
+  #-------------------------------------------------------------------------------Add to database
+  def cus_add_cst():
+    cst_id=cu_idr.get()#id
+    cus_bs_nm=bnm_cus.get()#bs name
+    # cmp_id=
+    cus_bs_ad_cus=bs_adr_cus.get()#bs ad name
+    cus_bs_cnt=bs_cnt.get()#Contact person
+    cus_bs_em=bs_em.get()#email bs
+    cus_bs_tel=bs_tel.get()#bs tel
+    cus_bs_fax=bs_fax.get()#bs fax
+    cus_bs_mob=bs_mobi.get()#bs mob
+    cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
+    cus_bs_spc_tax=cus_sp_tx.get()# specific tax
+    cus_bs_dis=cus_sp_disc.get()# discount
+    cus_bs_ctr=bs_cus_ct.get()# customer category
+
+    # ship 
+    cus_shp_cat=cus_catg.get()# category
+    cus_shp_st=cus_st.get()# status Checkbox
+    cus_shp_cnt_pr=cus_sh_nam.get()#contact person
+    cus_shp_adr=cus_sh_adr.get()#contact address
+    cus_shp_cnt=bs_sh_cnt.get()#Contact person
+    cus_shp_em=bs_sh_em.get()#email bs
+    cus_shp_tel=bs_sh_tel.get()#bs tel
+    cus_shp_fax=bs_sh_fax.get()#bs fax
+    cus_shp_cntry=cus_sh_coun.get()#contry
+    cus_shp_city=cus_sh_cty.get()#city
+    cus_shp_nte=cus_nt.get()
+    cus_ed_tbles="select * from customer where customerid=%s"
+    cus_ed_tbles_valuz=(cst_id,)
+    fbcursor.execute(cus_ed_tbles,cus_ed_tbles_valuz)
+    cus_ins_val=fbcursor.fetchone()
+
+    if cus_ins_val is None:
+      cus_tbl_add="INSERT INTO customer(customerid,category,status,businessname,businessaddress,shipname,shipaddress,contactperson,cpemail,cptelno,cpfax,cpmobileforsms,shipcontactperson,shipcpemail,shipcptelno,shipcpfax,taxexempt,specifictax1,discount,country,city,customertype,notes)VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)" #adding values into db
+      cus_tbl_add_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte)
+      fbcursor.execute(cus_tbl_add,cus_tbl_add_val)
+      fbilldb.commit()
+      main()
+    else:
+      messagebox.askyesno("Already Exists", "Customer ID value already exists. Duplicate value not allowed")
+      cus_add_customer()
+
+    
+    
+    
+
+  add_customer = Toplevel()  
+  add_customer.title("Add new Customer ")
+  p2 = PhotoImage(file = "images/fbicon.png")
+  add_customer.iconphoto(False, p2)
+  add_customer.geometry("775x580+300+100")
+  Labelframe1=LabelFrame(add_customer,text="Customer")
+  Labelframe1.place(x=10,y=10,width=755,height=525)
+  a1=Label(Labelframe1,text="Customer ID:",fg="Blue")
+  a2=Label(Labelframe1,text="Category:")
+  a3=Label(Labelframe1,text="Status :")
+  a3.place(x=620,y=7)
+  cu_idr=IntVar() 
+  b1=Entry(Labelframe1, textvariable = cu_idr)
+  cus_catg=StringVar() 
+  b2=ttk.Combobox(Labelframe1,textvariable = cus_catg)    
+  b2['values'] = ('Default')  
+  b2.place(x=390,y=220) 
+  b2.current(0)
+  a1.place(x=10,y=7)
+  a2.place(x=330,y=7)   
+  b1.place(x=120,y=7,width=200)
+  b2.place(x=390,y=7,width=220)
+  cus_st = IntVar()
+  chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = cus_st, onvalue = 1, offvalue = 0)
+  chkbtn1.select()
+  chkbtn1.place(x=670,y=6)
+
+
+  Labelframe2=LabelFrame(Labelframe1,text="Invoice to (appears on invoice)")
+  Labelframe2.place(x=10,y=35,width=340,height=125)
+  a1=Label(Labelframe2,text="Business Name:",fg="Blue").place(x=10,y=10)
+  a2=Label(Labelframe2,text="Address:",fg="Blue").place(x=10,y=35)
+  bnm_cus=StringVar()
+  bs_adr_cus=StringVar()
+  b1=Entry(Labelframe2, textvariable=bnm_cus).place(x=110,y=10,width=210)
+  b2=Entry(Labelframe2, textvariable=bs_adr_cus).place(x=110,y=35,width=210,height=63)  
+  btn110=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=85,height=20)
+
+
+  Labelframe3=LabelFrame(Labelframe1,text="Ship to (appears on invoice)")
+  Labelframe3.place(x=400,y=35,width=340,height=125)
+  a11=Label(Labelframe3,text="Ship to Name:").place(x=10,y=10)
+  a21=Label(Labelframe3,text="Address:").place(x=10,y=35)
+  cus_sh_nam=StringVar()
+  cus_sh_adr=StringVar()
+  b11=Entry(Labelframe3, textvariable=cus_sh_nam).place(x=110,y=10,width=210)
+  b21=Entry(Labelframe3, textvariable=cus_sh_adr).place(x=110,y=35,width=210,height=63)
+
+
+  Labelframe4=LabelFrame(Labelframe1,text="Contact")
+  Labelframe4.place(x=10,y=170,width=340,height=137)
+  a11=Label(Labelframe4,text="Contact Person:").place(x=10,y=10)
+  a21=Label(Labelframe4,text="Email Address:",fg="Blue").place(x=10,y=35)
+  a31=Label(Labelframe4,text="Tel. No:").place(x=10,y=60)
+  a41=Label(Labelframe4,text="Fax:").place(x=200,y=60)
+  a51=Label(Labelframe4,text="Mobile number for SMS notification:").place(x=10,y=85)
+  bs_cnt=StringVar()
+  bs_em=StringVar()
+  bs_tel=StringVar()
+  bs_fax=StringVar()
+  bs_mobi=StringVar()
+  b11=Entry(Labelframe4, textvariable=bs_cnt).place(x=110,y=10,width=210)
+  b21=Entry(Labelframe4,textvariable=bs_em).place(x=110,y=35,width=210)
+  b31=Entry(Labelframe4,textvariable=bs_tel).place(x=110,y=60,width=90)
+  b41=Entry(Labelframe4,textvariable=bs_fax).place(x=230,y=60,width=90)
+  b51=Entry(Labelframe4,textvariable=bs_mobi).place(x=215,y=85,width=105)
+  btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
+
+  bs_sh_cnt=StringVar()
+  bs_sh_em=StringVar()
+  bs_sh_tel=StringVar()
+  bs_sh_fax=StringVar()
+
+  Labelframe5=LabelFrame(Labelframe1,text="Ship To Contact")
+  Labelframe5.place(x=400,y=170,width=340,height=108)
+  a11=Label(Labelframe5,text="Contact Person:").place(x=10,y=10)
+  a21=Label(Labelframe5,text="Email Address:").place(x=10,y=35)
+  a31=Label(Labelframe5,text="Tel. No:").place(x=10,y=60)
+  a41=Label(Labelframe5,text="Fax:").place(x=200,y=60)
+
+  b11=Entry(Labelframe5, textvariable=bs_sh_cnt).place(x=110,y=10,width=210)
+  b21=Entry(Labelframe5,textvariable=bs_sh_em).place(x=110,y=35,width=210)
+  b31=Entry(Labelframe5,textvariable=bs_sh_tel).place(x=110,y=60,width=90)
+  b41=Entry(Labelframe5,textvariable=bs_sh_fax).place(x=230,y=60,width=90)
+
+
+  Labelframe6=LabelFrame(Labelframe1,text="Payment Option")
+  Labelframe6.place(x=10,y=317,width=340,height=80)
+  cus_ds_chk = StringVar()
+  cus_sp_tx=IntVar()
+  cus_sp_disc=IntVar()
+  chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = cus_ds_chk, onvalue = 1, offvalue = 0, font=("arial", 8))
+  chkbtn1.place(x=10,y=6)
+
+  a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+  a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
+  cus_sp_disc = IntVar(Labelframe6, value='0')
+  b11=Entry(Labelframe6, textvariable=cus_sp_tx).place(x=250,y=7,width=70)
+  b12=Entry(Labelframe6,textvariable=cus_sp_disc).place(x=80,y=30,width=70)
+
+
+  Labelframe7=LabelFrame(Labelframe1,text="Customer type")
+  Labelframe7.place(x=10,y=405,width=340,height=90)
+  bs_cus_ct=StringVar()
+  r1=Radiobutton(Labelframe7, text = "Client", variable = bs_cus_ct, value =0)
+  r1.select()
+  r1.place(x=5,y=15)
+  
+  r2=Radiobutton(Labelframe7, text = "Vender", variable = bs_cus_ct, value = 1)
+  r2.deselect()
+  r2.place(x=90,y=15)
+  r3=Radiobutton(Labelframe7, text = "Both(Client/Vender)", variable = bs_cus_ct, value = 2)
+  r3.deselect()
+  r3.place(x=180,y=15)
+
+
+  Labelframe8=LabelFrame(Labelframe1,text="Additional Info")
+  Labelframe8.place(x=400,y=288,width=340,height=80)
+  a11=Label(Labelframe8,text="Country:").place(x=10,y=5)
+  a12=Label(Labelframe8,text="City:").place(x=10,y=30)
+  cus_sh_coun=StringVar() 
+  cus_sh_cty=StringVar() 
+
+  b11=ttk.Combobox(Labelframe8,textvariable=cus_sh_coun)
+  b11.place(x=110,y=5,width=210)
+  b11['values'] = ('India','America')    
+  
+  b11.place(x=110,y=5) 
+  b12=Entry(Labelframe8,textvariable=cus_sh_cty).place(x=110,y=30,width=210)
+  Labelframe9=LabelFrame(Labelframe1,text="Notes")
+  Labelframe9.place(x=400,y=380,width=340,height=115)
+  '''scrollbar = Scrollbar(Labelframe9)
         scrollbar.place(x=300,y=10)
         b12=Entry(Labelframe9,yscrollcommand=scrollbar.set).place(x=10,y=10,width=290,height=70)
         yscrollcommand.config(command=b12.yview)'''
-    b12=Entry(Labelframe9).place(x=20,y=10,width=295,height=70)
-    scrollbar = Scrollbar(Labelframe9)
-    scrollbar.place(x=295,y=10)
-    btn1=Button(add_customer,width=50,compound = LEFT,image=tick ,text="  OK").place(x=20, y=545)
-    btn2=Button(add_customer,width=80,compound = LEFT,image=cancel,text="  Cancel").place(x=665, y=545)
-    add_customer.mainloop()
+  cus_nt=StringVar()
+  b12=Entry(Labelframe9, textvariable=cus_nt).place(x=20,y=10,width=295,height=70)
+  scrollbar_cus_nt = Scrollbar(Labelframe9)
+  scrollbar_cus_nt.place(x=295,y=10)
+
+  btn1=Button(add_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_add_cst(),text="  OK").place(x=20, y=545)
+  btn2=Button(add_customer,width=80,compound = LEFT,image=cancel,text="  Cancel").place(x=665, y=545)
+  add_customer.mainloop()
 #-----------------------------------------------------------------------------------Edit Customer
 def cus_edit_customer():
-    edit_customer = Toplevel()  
-    edit_customer.title("Edit Customer Details ")
-    p2 = PhotoImage(file = "images/fbicon.png")
-    edit_customer.iconphoto(False, p2)
-    edit_customer.geometry("775x580+300+100")
-    Labelframe1=LabelFrame(edit_customer,text="Customer")
-    Labelframe1.place(x=10,y=10,width=755,height=525)
-    a1=Label(Labelframe1,text="Customer ID:",fg="Blue")
-    a2=Label(Labelframe1,text="Category:")
-    a3=Label(Labelframe1,text="Status :")
-    a3.place(x=620,y=7)
-    b1=Entry(Labelframe1)
-    ca=StringVar() 
-    b2=ttk.Combobox(Labelframe1,textvariable = ca )    
-    b2['values'] = ('Default')  
-    b2.place(x=390,y=220) 
-    b2.current(0)
-    a1.place(x=10,y=7)
-    a2.place(x=330,y=7)   
-    b1.place(x=120,y=7,width=200)
-    b2.place(x=390,y=7,width=220)
-    checkvar1 = IntVar()
-    chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = checkvar1, onvalue = 0, offvalue = 1)
-    chkbtn1.place(x=670,y=6)
-    Labelframe2=LabelFrame(Labelframe1,text="Invoice to (appears on invoice)")
-    Labelframe2.place(x=10,y=35,width=340,height=125)
-    a1=Label(Labelframe2,text="Business Name:",fg="Blue").place(x=10,y=10)
-    a2=Label(Labelframe2,text="Address:",fg="Blue").place(x=10,y=35)
-    b1=Entry(Labelframe2).place(x=110,y=10,width=210)
-    b2=Entry(Labelframe2).place(x=110,y=35,width=210,height=63)  
-    btn110=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=85,height=20)
-    Labelframe3=LabelFrame(Labelframe1,text="Ship to (appears on invoice)")
-    Labelframe3.place(x=400,y=35,width=340,height=125)
-    a11=Label(Labelframe3,text="Ship to Name:").place(x=10,y=10)
-    a21=Label(Labelframe3,text="Address:").place(x=10,y=35)
-    b11=Entry(Labelframe3).place(x=110,y=10,width=210)
-    b21=Entry(Labelframe3).place(x=110,y=35,width=210,height=63)
-    Labelframe4=LabelFrame(Labelframe1,text="Contact")
-    Labelframe4.place(x=10,y=170,width=340,height=137)
-    a11=Label(Labelframe4,text="Contact Person:").place(x=10,y=10)
-    a21=Label(Labelframe4,text="Email Address:",fg="Blue").place(x=10,y=35)
-    a31=Label(Labelframe4,text="Tel. No:").place(x=10,y=60)
-    a41=Label(Labelframe4,text="Fax:").place(x=200,y=60)
-    a51=Label(Labelframe4,text="Mobile number for SMS notification:").place(x=10,y=85)
-    b11=Entry(Labelframe4).place(x=110,y=10,width=210)
-    b21=Entry(Labelframe4).place(x=110,y=35,width=210)
-    b31=Entry(Labelframe4).place(x=110,y=60,width=90)
-    b41=Entry(Labelframe4).place(x=230,y=60,width=90)
-    b51=Entry(Labelframe4).place(x=215,y=85,width=105)
-    btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
-    Labelframe5=LabelFrame(Labelframe1,text="Ship To Contact")
-    Labelframe5.place(x=400,y=170,width=340,height=108)
-    a11=Label(Labelframe5,text="Contact Person:").place(x=10,y=10)
-    a21=Label(Labelframe5,text="Email Address:").place(x=10,y=35)
-    a31=Label(Labelframe5,text="Tel. No:").place(x=10,y=60)
-    a41=Label(Labelframe5,text="Fax:").place(x=200,y=60)
-    b11=Entry(Labelframe5).place(x=110,y=10,width=210)
-    b21=Entry(Labelframe5).place(x=110,y=35,width=210)
-    b31=Entry(Labelframe5).place(x=110,y=60,width=90)
-    b41=Entry(Labelframe5).place(x=230,y=60,width=90)
-    Labelframe6=LabelFrame(Labelframe1,text="Payment Option")
-    Labelframe6.place(x=10,y=317,width=340,height=80)
-    checkvar1 = IntVar()
-    chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = checkvar1, onvalue = 1, offvalue = 0, font=("arial", 8))
-    chkbtn1.place(x=10,y=6)
-    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-    a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
-    b11val = IntVar(Labelframe6, value='0')
-    b11=Entry(Labelframe6).place(x=250,y=7,width=70)
-    b12=Entry(Labelframe6,textvariable=b11val).place(x=80,y=30,width=70)
-    Labelframe7=LabelFrame(Labelframe1,text="Customer type")
-    Labelframe7.place(x=10,y=405,width=340,height=90)
-    i=IntVar()
-    r1=Radiobutton(Labelframe7, text = "Client", variable = i, value = 1).place(x=5,y=15)
-    r2=Radiobutton(Labelframe7, text = "Vender", variable = i, value = 2).place(x=90,y=15)
-    r3=Radiobutton(Labelframe7, text = "Both(Client/Vender)", variable = i, value = 3).place(x=180,y=15)
-    Labelframe8=LabelFrame(Labelframe1,text="Additional Info")
-    Labelframe8.place(x=400,y=288,width=340,height=80)
-    a11=Label(Labelframe8,text="Country:").place(x=10,y=5)
-    a12=Label(Labelframe8,text="City:").place(x=10,y=30)
-    c=StringVar() 
-    b11=ttk.Combobox(Labelframe8,textvariable=c)
-    b11.place(x=110,y=5,width=210)
-    b11['values'] = ('India','America')    
-    b11.place(x=110,y=5) 
-    b12=Entry(Labelframe8).place(x=110,y=30,width=210)
-    Labelframe9=LabelFrame(Labelframe1,text="Notes")
-    Labelframe9.place(x=400,y=380,width=340,height=115)
-    '''scrollbar = Scrollbar(Labelframe9)
+  cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
+  print(cus_id)
+  cus_ed_tbles="select * from customer where customerid=%s"
+  cus_ed_tbles_valuz=(cus_id,)
+  fbcursor.execute(cus_ed_tbles,cus_ed_tbles_valuz)
+  cus_ins_val=fbcursor.fetchone()
+  
+
+  
+  
+
+  def cus_edit_cst():
+    cst_id=cu_idr.get()#id
+    cus_bs_nm=bnm_cus.get()#bs name
+    # cmp_id=
+    cus_bs_ad_cus=bs_adr_cus.get()#bs ad name
+    cus_bs_cnt=bs_cnt.get()#Contact person
+    cus_bs_em=bs_em.get()#email bs
+    cus_bs_tel=bs_tel.get()#bs tel
+    cus_bs_fax=bs_fax.get()#bs fax
+    cus_bs_mob=bs_mobi.get()#bs mob
+    cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
+    cus_bs_spc_tax=cus_sp_tx.get()# specific tax
+    cus_bs_dis=cus_sp_disc.get()# discount
+    cus_bs_ctr=bs_cus_ct.get()# customer category
+
+    # ship 
+    cus_shp_cat=cus_catg.get()# category
+    cus_shp_st=cus_st.get()# status Checkbox
+    cus_shp_cnt_pr=cus_sh_nam.get()#contact person
+    cus_shp_adr=cus_sh_adr.get()#contact address
+    cus_shp_cnt=bs_sh_cnt.get()#Contact person
+    cus_shp_em=bs_sh_em.get()#email bs
+    cus_shp_tel=bs_sh_tel.get()#bs tel
+    cus_shp_fax=bs_sh_fax.get()#bs fax
+    cus_shp_cntry=cus_sh_coun.get()#contry
+    cus_shp_city=cus_sh_cty.get()#city
+    cus_shp_nte=cus_nt.get()
+
+    cus_tbl_edit="update customer set customerid=%s,category=%s,status=%s,businessname=%s,businessaddress=%s,shipname=%s,shipaddress=%s,contactperson=%s,cpemail=%s,cptelno=%s,cpfax=%s,cpmobileforsms=%s,shipcontactperson=%s,shipcpemail=%s,shipcptelno=%s,shipcpfax=%s,taxexempt=%s,specifictax1=%s,discount=%s,country=%s,city=%s,customertype=%s,notes=%s where customerid = %s" #adding values into db
+    cus_tbl_edit_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte,cus_id)
+    fbcursor.execute(cus_tbl_edit,cus_tbl_edit_val)
+    fbilldb.commit()
+    # add_customer.distroy
+    main()
+
+  add_customer = Toplevel()  
+  add_customer.title("Add new Customer ")
+  p2 = PhotoImage(file = "images/fbicon.png")
+  add_customer.iconphoto(False, p2)
+  add_customer.geometry("775x580+300+100")
+  Labelframe1=LabelFrame(add_customer,text="Customer")
+  Labelframe1.place(x=10,y=10,width=755,height=525)
+  a1=Label(Labelframe1,text="Customer ID:",fg="Blue")
+  a2=Label(Labelframe1,text="Category:")
+  a3=Label(Labelframe1,text="Status :")
+  a3.place(x=620,y=7)
+  cu_idr=IntVar() 
+  b1=Entry(Labelframe1, textvariable = cu_idr)
+  b1.insert(0,cus_ins_val[0])
+  cus_catg=StringVar() 
+  b2=ttk.Combobox(Labelframe1,textvariable = cus_catg)    
+  b2['values'] = ('Default')  
+  
+  b2.place(x=390,y=220) 
+  b2.current(0)
+  a1.place(x=10,y=7)
+  a2.place(x=330,y=7)   
+  b1.place(x=120,y=7,width=200)
+  b2.place(x=390,y=7,width=220)
+  cus_st = IntVar()
+  chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = cus_st, onvalue = 1, offvalue = 0)
+  if cus_ins_val[3]==0:
+    chkbtn1.deselect()
+  else:
+    chkbtn1.select()
+  chkbtn1.place(x=670,y=6)
+
+  Labelframe2=LabelFrame(Labelframe1,text="Invoice to (appears on invoice)")
+  Labelframe2.place(x=10,y=35,width=340,height=125)
+  a1=Label(Labelframe2,text="Business Name:",fg="Blue").place(x=10,y=10)
+  a2=Label(Labelframe2,text="Address:",fg="Blue").place(x=10,y=35)
+  bnm_cus=StringVar()
+  bs_adr_cus=StringVar()
+  b1=Entry(Labelframe2, textvariable=bnm_cus)
+  b1.insert(0,cus_ins_val[4])
+  b1.place(x=110,y=10,width=210)
+  b2=Entry(Labelframe2, textvariable=bs_adr_cus) 
+  
+  b2.insert(0,cus_ins_val[5])
+  b2.place(x=110,y=35,width=210,height=63) 
+  # b1.place(x=359,y=85,height=20)
+  btn110=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>")
+
+
+  Labelframe3=LabelFrame(Labelframe1,text="Ship to (appears on invoice)")
+  Labelframe3.place(x=400,y=35,width=340,height=125)
+  a11=Label(Labelframe3,text="Ship to Name:").place(x=10,y=10)
+  a21=Label(Labelframe3,text="Address:").place(x=10,y=35)
+  cus_sh_nam=StringVar()
+  cus_sh_adr=StringVar()
+  b11=Entry(Labelframe3, textvariable=cus_sh_nam)
+  b11.insert(0,cus_ins_val[6])
+  b11.place(x=110,y=10,width=210)
+  b21=Entry(Labelframe3, textvariable=cus_sh_adr)
+  b21.delete(0,'end')
+  b21.insert(0,cus_ins_val[7])
+  b21.place(x=110,y=35,width=210,height=63)
+
+
+  Labelframe4=LabelFrame(Labelframe1,text="Contact")
+  Labelframe4.place(x=10,y=170,width=340,height=137)
+  a11=Label(Labelframe4,text="Contact Person:").place(x=10,y=10)
+  a21=Label(Labelframe4,text="Email Address:",fg="Blue").place(x=10,y=35)
+  a31=Label(Labelframe4,text="Tel. No:").place(x=10,y=60)
+  a41=Label(Labelframe4,text="Fax:").place(x=200,y=60)
+  a51=Label(Labelframe4,text="Mobile number for SMS notification:").place(x=10,y=85)
+  bs_cnt=StringVar()
+  bs_em=StringVar()
+  bs_tel=StringVar()
+  bs_fax=StringVar()
+  bs_mobi=StringVar()
+  b11=Entry(Labelframe4, textvariable=bs_cnt)
+  b11.insert(0,cus_ins_val[8])
+  b11.place(x=110,y=10,width=210)
+  b21=Entry(Labelframe4,textvariable=bs_em)
+  b21.insert(0,cus_ins_val[9])
+  b21.place(x=110,y=35,width=210)
+  b31=Entry(Labelframe4,textvariable=bs_tel)
+  b31.insert(0,cus_ins_val[10])
+  b31.place(x=110,y=60,width=90)
+  b41=Entry(Labelframe4,textvariable=bs_fax)
+  b41.insert(0,cus_ins_val[11])
+  b41.place(x=230,y=60,width=90)
+  b51=Entry(Labelframe4,textvariable=bs_mobi)
+  b51.insert(0,cus_ins_val[12])
+  b51.place(x=215,y=85,width=105)
+  btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
+
+  bs_sh_cnt=StringVar()
+  bs_sh_em=StringVar()
+  bs_sh_tel=StringVar()
+  bs_sh_fax=StringVar()
+
+  Labelframe5=LabelFrame(Labelframe1,text="Ship To Contact")
+  Labelframe5.place(x=400,y=170,width=340,height=108)
+  a11=Label(Labelframe5,text="Contact Person:").place(x=10,y=10)
+  a21=Label(Labelframe5,text="Email Address:").place(x=10,y=35)
+  a31=Label(Labelframe5,text="Tel. No:").place(x=10,y=60)
+  a41=Label(Labelframe5,text="Fax:").place(x=200,y=60)
+
+  b11=Entry(Labelframe5, textvariable=bs_sh_cnt)
+  b11.insert(0,cus_ins_val[13])
+  b11.place(x=110,y=10,width=210)
+  b21=Entry(Labelframe5,textvariable=bs_sh_em)
+  b21.insert(0,cus_ins_val[14])
+  b21.place(x=110,y=35,width=210)
+  b31=Entry(Labelframe5,textvariable=bs_sh_tel)
+  b31.insert(0,cus_ins_val[15])
+  b31.place(x=110,y=60,width=90)
+  b41=Entry(Labelframe5,textvariable=bs_sh_fax)
+  b41.insert(0,cus_ins_val[16])
+  b41.place(x=230,y=60,width=90)
+
+
+  Labelframe6=LabelFrame(Labelframe1,text="Payment Option")
+  Labelframe6.place(x=10,y=317,width=340,height=80)
+  cus_ds_chk = StringVar()
+  cus_sp_tx=IntVar()
+  cus_sp_disc=IntVar()
+  chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = cus_ds_chk, onvalue = 1, offvalue = 0, font=("arial", 8))
+  if cus_ins_val[17]==0:
+    chkbtn1.select()
+  elif cus_ins_val[17]==0:
+    chkbtn1.deselect()
+  chkbtn1.place(x=10,y=6)
+
+  a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+  a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
+  cus_sp_disc = IntVar(Labelframe6, value='0')
+  b11=Entry(Labelframe6, textvariable=cus_sp_tx)
+  b11.insert(0,cus_ins_val[18])
+  b11.place(x=250,y=7,width=70)
+  b12=Entry(Labelframe6,textvariable=cus_sp_disc)
+  b12.insert(0,cus_ins_val[19])
+  b12.place(x=80,y=30,width=70)
+
+
+  Labelframe7=LabelFrame(Labelframe1,text="Customer type")
+  Labelframe7.place(x=10,y=405,width=340,height=90)
+  bs_cus_ct=StringVar()
+  r1=Radiobutton(Labelframe7, text = "Client", variable = bs_cus_ct, value ="Client")
+  r2=Radiobutton(Labelframe7, text = "Vender", variable = bs_cus_ct, value = "Vender")
+  r3=Radiobutton(Labelframe7, text = "Both(Client/Vender)", variable = bs_cus_ct, value = "Both(Client/Vender)")
+  if cus_ins_val[22]=="Client":
+    r1.select()
+    r2.deselect()
+    r3.deselect()
+  elif cus_ins_val[22]=="Vender":
+    r1.deselect()
+    r2.select()
+    r3.deselect()
+  else:
+    r1.deselect()
+    r2.deselect()
+    r3.select()
+  r1.place(x=5,y=15)
+  r2.place(x=90,y=15)
+  r3.place(x=180,y=15)
+
+  Labelframe8=LabelFrame(Labelframe1,text="Additional Info")
+  Labelframe8.place(x=400,y=288,width=340,height=80)
+  a11=Label(Labelframe8,text="Country:").place(x=10,y=5)
+  a12=Label(Labelframe8,text="City:").place(x=10,y=30)
+  cus_sh_coun=StringVar() 
+  cus_sh_cty=StringVar() 
+
+  b11=ttk.Combobox(Labelframe8,textvariable=cus_sh_coun)
+  b11.place(x=110,y=5,width=210)
+  b11['values'] = ('India','America')  
+  b11.insert(0,cus_ins_val[20])  
+  b11.place(x=110,y=5) 
+  b12=Entry(Labelframe8,textvariable=cus_sh_cty)
+  b12.insert(0,cus_ins_val[21])  
+  b12.place(x=110,y=30,width=210)
+  Labelframe9=LabelFrame(Labelframe1,text="Notes")
+  Labelframe9.place(x=400,y=380,width=340,height=115)
+  '''scrollbar = Scrollbar(Labelframe9)
         scrollbar.place(x=300,y=10)
         b12=Entry(Labelframe9,yscrollcommand=scrollbar.set).place(x=10,y=10,width=290,height=70)
         yscrollcommand.config(command=b12.yview)'''
-    b12=Entry(Labelframe9).place(x=20,y=10,width=295,height=70)
-    scrollbar = Scrollbar(Labelframe9)
-    scrollbar.place(x=295,y=10)
-    btn1=Button(edit_customer,width=50,compound = LEFT,image=tick ,text="  OK").place(x=20, y=545)
-    btn2=Button(edit_customer,width=80,compound = LEFT,image=cancel,text="  Cancel").place(x=665, y=545)
-    edit_customer.mainloop()
+  cus_nt=StringVar()
+  b12=Entry(Labelframe9, textvariable=cus_nt)
+  b12.insert(0,cus_ins_val[23])  
+  b12.place(x=20,y=10,width=295,height=70)
+  scrollbar_cus_nt = Scrollbar(Labelframe9)
+  scrollbar_cus_nt.place(x=295,y=10)
+
+  btn1=Button(add_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_edit_cst(),text="  OK").place(x=20, y=545)
+  btn2=Button(add_customer,width=80,compound = LEFT,image=cancel,text="  Cancel").place(x=665, y=545)
+  add_customer.mainloop()
 #-----------------------------------------------------------------------------------Delete Customer
 def cus_delete_customer():
-   
-    messagebox.askyesno("Delete Customers", "Are you sure want to delete 1 Customer(s) ?")
+  cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
+  print(cus_id)
+  
+  messagebox.askyesno("Delete Customers", "Are you sure want to delete 1 Customer(s) ?")
+  sql_qr="DELETE FROM customer WHERE customerid=%s"
+  sql_qr_val=(cus_id,)
+  fbcursor.execute(sql_qr,sql_qr_val)
+  fbilldb.commit()
+  main()
 #-----------------------------------------------------------------------------------Preview Invoice Customer
 def cus_previewinvoice_customer():
   cus_in_preview = Toplevel()
