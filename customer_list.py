@@ -66,7 +66,7 @@ import tempfile
 from PIL import ImageGrab
 from PIL import ImageTk, Image, ImageFile
 import PIL.Image
-
+from textwrap import wrap
 
 
 
@@ -252,7 +252,7 @@ cus_pn.pack(side="left", padx=5)
 
 usr_rfs= PIL.Image.open("images/refresh.png")
 cus_refreshcustomerIcon=ImageTk.PhotoImage(usr_rfs)
-cus_refreshcustomerLabel = Button(CusmidFrame,compound="top", command=lambda:cus_refresh_customers(self),text="Refresh\ncustomer list",relief=RAISED,               image=cus_refreshcustomerIcon, font=("arial", 8),bg="#f8f8f2", fg="black", height=55, bd=1, width=55)
+cus_refreshcustomerLabel = Button(CusmidFrame,compound="top", command=lambda:ct_filter(),text="Refresh\ncustomer list",relief=RAISED,               image=cus_refreshcustomerIcon, font=("arial", 8),bg="#f8f8f2", fg="black", height=55, bd=1, width=55)
 cus_refreshcustomerLabel.pack(side="left")
 
 cus_invoi1label = Label(customermain, text="Customers", font=("arial", 18), bg="#f8f8f2")
@@ -271,42 +271,6 @@ cus_flt.current(0)
 
 
 
-def main():
-  global cus_main_tree
-  cus_main_s=ttk.Style()
-  cus_main_s.configure('Treeview.Heading',background='white')
-  cus_main_tree=ttk.Treeview(tab7,selectmode='browse')
-  cus_main_tree.place(x=0,y=95,height=280)
-  cus_main_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
-  cus_main_vertical_bar.place(x=1083,y=95,height=280)
-  cus_main_tree["columns"]=("1","2","3","4","5","6","7","8")
-  cus_main_tree["show"]='headings'
-  cus_main_tree.column("1",width=30,anchor='c')
-  cus_main_tree.column("2",width=140,anchor='c')
-  cus_main_tree.column("3",width=190,anchor='c')
-  cus_main_tree.column("4",width=176,anchor='c')
-  cus_main_tree.column("5",width=176,anchor='c')
-  cus_main_tree.column("6",width=120,anchor='c')
-  cus_main_tree.column("7",width=130,anchor='c')
-  cus_main_tree.column("8",width=120,anchor='c')
-  cus_main_tree.heading("1",text="")
-  cus_main_tree.heading("2",text="Customer ID")
-  cus_main_tree.heading("3",text="Category")
-  cus_main_tree.heading("4",text="Customer Name")
-  cus_main_tree.heading("5",text="Contact Persion")
-  cus_main_tree.heading("6",text="Customer Tel.")
-  cus_main_tree.heading("7",text="SMS Number")
-  cus_main_tree.heading("8",text="Type")
-
-  cus_main_table_sql="select * from customer"
-  fbcursor.execute(cus_main_table_sql)
-  main_tb_val=fbcursor.fetchall()
-  count_cus=0
-  for i in main_tb_val:
-    cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[4],i[8],i[10],i[12],i[22]))
-    count_cus +=1
-
-main()
 
 # cus_s=ttk.Style()
 # cus_s.configure('Treeview.Heading',background='white')
@@ -783,14 +747,10 @@ def cus_add_customer():
       cus_tbl_add_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte)
       fbcursor.execute(cus_tbl_add,cus_tbl_add_val)
       fbilldb.commit()
-      main()
+     
     else:
       messagebox.askyesno("Already Exists", "Customer ID value already exists. Duplicate value not allowed")
       cus_add_customer()
-
-    
-    
-    
 
   add_customer = Toplevel()  
   add_customer.title("Add new Customer ")
@@ -981,7 +941,7 @@ def cus_edit_customer():
     fbcursor.execute(cus_tbl_edit,cus_tbl_edit_val)
     fbilldb.commit()
     # add_customer.distroy
-    main()
+    
 
   add_customer = Toplevel()  
   add_customer.title("Add new Customer ")
@@ -1188,7 +1148,17 @@ def cus_delete_customer():
   sql_qr_val=(cus_id,)
   fbcursor.execute(sql_qr,sql_qr_val)
   fbilldb.commit()
-  main()
+
+  # for record in cus_main_tree.get_children():
+  #   cus_main_tree.delete(records)
+  # cus_main_table_sql="select * from customer"
+  # fbcursor.execute(cus_main_table_sql)
+  # main_tb_val=fbcursor.fetchall()
+  # count_cus=0
+
+  # for i in main_tb_val:
+  #   cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[4],i[8],i[10],i[12],i[22]))
+  #   count_cus +=1
 #-----------------------------------------------------------------------------------Preview Invoice Customer
 def cus_previewinvoice_customer():
   cus_in_preview = Toplevel()
@@ -1215,133 +1185,245 @@ def cus_previewinvoice_customer():
   cus_in_paperheigth = cus_in_preview.winfo_fpixels('1m') * 297
   cus_in_paperwidth = cus_in_preview.winfo_fpixels('1m') * 210
   cus_in_canvas.create_rectangle(265, 20, 265+cus_in_paperwidth, 20+cus_in_paperheigth, outline='orange', fill='white')
+  cus_company = "SELECT * from company"
+  fbcursor.execute(cus_company)
+  cus_company= fbcursor.fetchone()
+
+
+  cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+
+  cus_main_table_sql="select * from orders where businessname=%s"
+  cus_main_table_sql_val=(cus_id,)
+  fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+  main_tb_val=fbcursor.fetchone()
+
+  sqlr= 'select currencysign from company'
+  fbcursor.execute(sqlr)
+  crncy=fbcursor.fetchone()
+  crc=crncy[0]
+  sqlrt= 'select currsignplace from company'
+  fbcursor.execute(sqlrt)
+  post_rp=fbcursor.fetchone()
+  ps_cr=post_rp[0]
+  #-------------------------------------------------------------------------------------------------Heder data--------
+  labelcmp=Label(cus_in_canvas,text=cus_company[1], bg="white",anchor="nw",font=("Helvetica", 12), width=40, height=2)
+  window = cus_in_canvas.create_window(300,80, anchor="nw", window=labelcmp)
+
+  labelcmpl=Label(cus_in_canvas,text=cus_company[2], bg="white",font=("Helvetica", 9),anchor="nw", width=50,justify=LEFT, height=6)
+  windowl = cus_in_canvas.create_window(300,120, anchor="nw", window=labelcmpl)
+  cus_in_canvas.create_text(950,100, text="Invoices List",font=("Helvetica", 16), justify='right')
+  cus_in_canvas.create_text(350,228,text=cus_company[4],fill='black',font=("Helvetica", 8), justify='left')
+  cus_in_canvas.create_text(953,220,text="Customer ID:"+str(main_tb_val[0]),fill='black',font=("Helvetica", 12), justify='right')
+
+  cus_sql5="select * from customer where businessname=%s"
+  cus_sql5_vals=(cus_id,)
+  fbcursor.execute(cus_sql5,cus_sql5_vals)
+  cus_det=fbcursor.fetchone()
+
+  cus_in_canvas.create_text(330,260,text="Bill To:",fill='black',font=("Helvetica", 12), justify='right')
+  labelcmp=Label(cus_in_canvas,text=cus_det[4] , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=1)
+  window = cus_in_canvas.create_window(305,275, anchor="nw", window=labelcmp)
+  text=cus_det[5]
+  wraped_text="\n".join(wrap(text,30))
+  labelcmp=Label(cus_in_canvas,text=wraped_text , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=4)
+  window = cus_in_canvas.create_window(305,295, anchor="nw", window=labelcmp)
+
+  cus_in_canvas.create_text(720,260,text="Ship To:",fill='black',font=("Helvetica", 12), justify='right')
+  labelcmp=Label(cus_in_canvas,text=cus_det[6] , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=1)
+  window = cus_in_canvas.create_window(690,275, anchor="nw", window=labelcmp)
+  text=cus_det[7]
+  wraped_text="\n".join(wrap(text,30))
+  labelcmp=Label(cus_in_canvas,text=wraped_text , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=4)
+  window = cus_in_canvas.create_window(690,295, anchor="nw", window=labelcmp)
+  #---------------------------------------------------------------------------------------------------Table Data
+
+  style=ttk.Style()
+  style.configure("mystyle.Treeview", highlightthickness=0, bd=0, font=('Calibri', 11)) # Modify the font of the body
+  style.configure("mystyle.Treeview.Heading", font=('Calibri', 13), background='white') # Modify the font of the headings
+  style.layout("mystyle.Treeview", [('mystyle.Treeview.treearea', {'sticky': 'nswe'})]) # Remove the borders
+
+  # Add a Treeview widge
+                      
+  cus_prv_tree=ttk.Treeview(cus_in_canvas, column=("c1", "c2","c3", "c4", "c5", "c6", "c7","c8"), show='headings', height=30, style='mystyle.Treeview')
+  cus_prv_tree.column("# 1", anchor=E, stretch=NO, width=100)
+  cus_prv_tree.heading("# 1", text="Invoice No")
+  cus_prv_tree.column("# 2", anchor=E, stretch=NO, width=80)
+  cus_prv_tree.heading("# 2", text="Date")
+  cus_prv_tree.column("# 3", anchor=E, stretch=NO, width=80)
+  cus_prv_tree.heading("# 3", text="Due Date")
+  cus_prv_tree.column("# 4", anchor=E, stretch=NO, width=100)
+  cus_prv_tree.heading("# 4", text="Recurring")
+  cus_prv_tree.column("# 5", anchor=E, stretch=NO, width=100)
+  cus_prv_tree.heading("# 5", text="Status")
+  cus_prv_tree.column("# 6", anchor=E, stretch=NO, width=100)
+  cus_prv_tree.heading("# 6", text="Invoice Total")
+  cus_prv_tree.column("# 7", anchor=E, stretch=NO, width=100)
+  cus_prv_tree.heading("# 7", text="Total Paid")
+  cus_prv_tree.column("# 8", anchor=E, stretch=NO, width=100)
+  cus_prv_tree.heading("# 8", text="Balance")
+
+  sql_qry="select * from invoice where businessname=%s"
+  sql_qryvlz=(cus_id,)
+  fbcursor.execute(sql_qry,sql_qryvlz)
+  tre=fbcursor.fetchall() 
+  for record in cus_prv_tree.get_children():
+    cus_prv_tree.delete(record)
+             
+
+  count=0
+  for i in tre:
+    if ps_cr=="before amount":
+      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],"",i[5], crc+str(i[8]), crc+str(i[9]), crc+str(i[10])))
+                     
+    elif ps_cr=="after amount":
+      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],"",i[5], str(i[8])+crc, str(i[9])+crc,str(i[10])+crc))
+                      
+    elif ps_cr=="before amount with space":
+      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],"",i[5], crc+" "+str(i[8]), crc+" "+str(i[9]), crc+" "+str(i[10])))
+                      
+    elif ps_cr=="after amount with space":
+      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],"",i[5],  str(i[8])+" "+crc, str(i[9])+" "+crc,str(i[10])+" "+crc))
+                      
+                   
+    else:
+      pass
+    count += 1
+
+  window = cus_in_canvas.create_window(280, 320, anchor="nw", window=cus_prv_tree)
+
+              
 #-----------------------------------------------------------------------------------print Invoice Customer
 def cus_printinvoice_customer():
+      from reportlab.pdfgen import canvas
+      # from tkdocviewer import *
+      from reportlab.lib import colors
+      from reportlab.pdfbase.ttfonts import TTFont
+      from reportlab.pdfbase import pdfmetrics
+      from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+      from reportlab.lib.pagesizes import letter, inch
 
-  def property1():
-    propert=Toplevel()
-    propert.title("OneNote for Windows 10 Document Properties")
-    p2 = PhotoImage(file = "images/fbicon.png")
-    propert.iconphoto(False, p2)
-    propert.geometry("580x470+380+210")
+      pdf = canvas.Canvas("customer_Reports/Recurring_Invoice_Report.pdf", pagesize=letter)
+      cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+      sqlt= 'select * from customer where businessname=%s'
+      sqlt_val=(cus_id,)
+      fbcursor.execute(sqlt,sqlt_val)
+      cus_ft=fbcursor.fetchone()
 
-    def property2():
-      propert1=Toplevel()
-      propert1.title("Microsoft Print To PDF Advanced Document Options")
-      p2 = PhotoImage(file = "images/fbicon.png")
-      propert1.iconphoto(False, p2)
-      propert1.geometry("580x470+410+220")
-      property1_Frame1=LabelFrame(propert1,height=405, width=560)
-      property1_Frame1.place(x=10, y=10)  
-      name=Label(property1_Frame1, text="Microsoft Print To PDF Advanced Document Settings").place(x=10, y=5)
-      paper=Label(property1_Frame1, text="Paper/Output").place(x=30, y=35)
-      size=Label(property1_Frame1, text="Paper size:").place(x=55, y=65)
-      n = StringVar()
-      search = ttk.Combobox(property1_Frame1, width = 28, textvariable = n )
-      search['values'] = ('A4','Letter')
-      search.place(x=150,y=65)
-      search.current(0)
-      copy=Label(property1_Frame1, text="Copy Count:").place(x=55, y=95)
-      nocopy = Spinbox(property1_Frame1,from_=0,to=100000000, width=28).place(x=150, y=95)    
-      btn=Button(propert1,text="OK", width=10,).place(x=390, y=425)
-      btn=Button(propert1,text="Cancel", width=10,).place(x=490, y=425)     
+      sql_company = "SELECT * from company"
+      fbcursor.execute(sql_company)
+      company= fbcursor.fetchone()
       
-    style = ttk.Style()
-    style.theme_use('default')
-    style.configure('TNotebook.Tab', background="#999999", padding=5)
-    property_Notebook = ttk.Notebook(propert)
-    property_Frame = Frame(property_Notebook, height=450, width=581)
-    property_Notebook.add(property_Frame, text="Layout")
-    property_Notebook.place(x=0, y=0)
-    property_Frame1=LabelFrame(property_Frame,height=380, width=560)
-    property_Frame1.place(x=10, y=10)   
-    name=Label(property_Frame1, text="Orientation:").place(x=10, y=15)
-    n = StringVar()
-    search = ttk.Combobox(property_Frame1, width = 28, textvariable = n )
-    search['values'] = ('Landscape','Portrait')
-    search.place(x=10,y=40)
-    search.current(0)
-    text=Text(property_Frame1,width=40).place(x=217, y=20,height=300)
-    btn=Button(property_Frame1, text="Advanced...", width=10,command=property2).place(x=430, y=335)
-    btn=Button(property_Frame,text="OK", width=10,).place(x=390, y=400)
-    btn=Button(property_Frame, text="Cancel", width=10,).place(x=490, y=400)     
- 
-  print1=Toplevel()
-  print1.title("Print")
-  p2 = PhotoImage(file = "images/fbicon.png")
-  print1.iconphoto(False, p2)   
-  print1.geometry("580x390+350+200")
-  printerframe=LabelFrame(print1, text="Printer", height=85, width=563)
-  printerframe.place(x=10, y=5)   
-  name=Label(printerframe, text="Name:").place(x=10, y=5)
-  v=StringVar() 
-  e1= ttk.Combobox(printerframe,textvariable=v)
-  e1['values'] = ('OneNote for Windows10','Microsoft XPS Document Writer','Microsoft Print PDF','Fax')   
-  e1.place(x=70,y=5,width=310) 
-  e1.current(0)
-  where=Label(printerframe, text="Where:").place(x=10, y=35)
-  printocheckvar=IntVar()
-  printochkbtn=Checkbutton(printerframe,text="Print to file",variable=printocheckvar,onvalue=1,offvalue=0,height=1,width=10)
-  printochkbtn.place(x=390, y=35)
-  btn=Button(printerframe, text="Properties", width=10,command=property1).place(x=470, y=5)
-  pageslblframe=LabelFrame(print1, text="Pages", height=140, width=277)
-  pageslblframe.place(x=10, y=95)
-  radvar=IntVar()
-  radioall=Radiobutton(pageslblframe, text="All", variable=radvar, value="1").place(x=10, y=5)
-  radiocpage=Radiobutton(pageslblframe, text="Current Page", variable=radvar, value="2").place(x=10, y=25)
-  radiopages=Radiobutton(pageslblframe, text="Pages: ", variable=radvar, value="3").place(x=10, y=45)
-  pagecountentry = Entry(pageslblframe, width=30).place(x=80, y=47)
-  pageinfolabl=Label(pageslblframe,text="Enter page numbers and/or page ranges\n      seperated by commas. For example:1,3,5-12")
-  pageinfolabl.place(x=0, y=75)
-  copylblframe=LabelFrame(print1, text="Copies", height=140, width=277)
-  copylblframe.place(x=295, y=95)
-  nolabl=Label(copylblframe, text="Number of copies").place(x=5, y=5)      
-  noentry = Spinbox(copylblframe,from_=0,to=100000000, width=18).place(x=140, y=5)      
-  one=Frame(copylblframe, width=30, height=50, bg="black").place(x=20, y=40)     
-  two=Frame(copylblframe, width=30, height=50, bg="grey").place(x=15, y=45)     
-  three=Frame(copylblframe, width=30, height=50, bg="white").place(x=10, y=50)      
-  four=Frame(copylblframe, width=30, height=50, bg="black").place(x=80, y=40)      
-  fiv=Frame(copylblframe, width=30, height=50, bg="grey").place(x=75, y=45)      
-  six=Frame(copylblframe, width=30, height=50, bg="white").place(x=70, y=50)      
-  collatecheckvar=IntVar()
-  collatechkbtn=Checkbutton(copylblframe,text="Collate",variable=collatecheckvar,onvalue=1,offvalue=0,height=1,width=10)
-  collatechkbtn.place(x=120, y=40)
-  othrlblframe=LabelFrame(print1, text="Other", height=100, width=277)
-  othrlblframe.place(x=10, y=240)
-  printlb=Label(othrlblframe, text="Print").place(x=5, y=0)
-  va=StringVar()  
-  dropprint= ttk.Combobox(othrlblframe,textvariable=va)
-  dropprint['values'] = ('AllPages','Odd Pages','Even Pages')     
-  dropprint.place(x=80,y=0,width=185) 
-  dropprint.current(0)
-  orderlb=Label(othrlblframe, text="Order").place(x=5, y=25)
-  dropord = ttk.Combobox(othrlblframe, width=28).place(x=80, y=25)
-  val=StringVar() 
-  dropord= ttk.Combobox(othrlblframe,textvariable=val)
-  dropord['values'] = ('Direct(1-9)','Reverse(1-9)')   
-  dropord.place(x=80,y=25,width=185) 
-  dropord.current(0)
-  duplexlb=Label(othrlblframe, text="Duplex").place(x=5, y=50)
-  val1=StringVar() 
-  droplex= ttk.Combobox(othrlblframe,textvariable=val1)
-  droplex['values'] = ('Default','Vertical','Horizontal','Simplex') 
-  droplex.place(x=80,y=50,width=185) 
-  droplex.current(0)
-  prmodelblframe=LabelFrame(print1, text="Print mode",height=100, width=277)
-  prmodelblframe.place(x=295, y=240)
-  val11=StringVar() 
-  dropscal= ttk.Combobox(prmodelblframe,textvariable=val11)
-  dropscal['values'] = ('Default','Split big Pages','Join Small Pages','Scale') 
-  dropscal.place(x=5,y=5,width=260,height=40) 
-  dropscal.current(0)
-  poslb=Label(prmodelblframe, text="Print on sheet").place(x=5, y=50)
-  val12=StringVar() 
-  droppos= ttk.Combobox(prmodelblframe,textvariable=val12)
-  droppos['values'] = ('Default')   
-  droppos.place(x=136,y=50,width=129) 
-  droppos.current(0)
-  okbtn=Button(print1, text="Ok", width=10).place(x=390, y=350)
-  canbtn=Button(print1, text="Cancel", width=10).place(x=490, y=350)
+      pdf.setFont('Helvetica',12)
+      pdf.drawString(30,768, company[1])
+      text=company[2]
+      wraped_text="\n".join(wrap(text,30))
+      htg=wraped_text.split('\n')
+          
+      vg=len(htg)
+      if vg>0:
+              pdf.drawString(30,752,htg[0])
+              print("1")
+              if vg>1:
+                pdf.drawString(30,738,htg[1])
+                print("2")
+                if vg>2:
+                    pdf.drawString(30,725,htg[2])
+                    print("3")
+                    if vg>3:
+                        pdf.drawString(30,712,htg[3])
+                        print("4")
+                    else:
+                        pass
+                else:
+                    pass
+              else:
+                  pass
+              
+      else:
+              pass
+      pdf.drawString(30,700, "Sales tax reg No:"+company[4])
+      pdf.drawString(490,760, "Invoice Report")
+
+      pdf.drawString(460,720,"Customer ID:"+str(cus_ft[0]))
+      pdf.drawString(28,695,"__________________________________________________________________________________")
+      pdf.drawString(28,675,"__________________________________________________________________________________")
+      pdf.drawString(28,678,"Invoice No           Date        Due Date     Recurring      Status        Invoice Total    Total Paid   Balance      ")
+      
+      
+      sqlr= 'select currencysign from company'
+      fbcursor.execute(sqlr)
+      crncy=fbcursor.fetchone()
+        
+      crc=crncy[0]
+      sqlrt= 'select currsignplace from company'
+      fbcursor.execute(sqlrt)
+      post_rp=fbcursor.fetchone()
+      ps_cr=post_rp[0]
+      count=0
+      sql_inv_dt='SELECT * FROM invoice where businessname=%s'
+      inv_valuz=(cus_id,)
+      fbcursor.execute(sql_inv_dt,inv_valuz)
+      tre=fbcursor.fetchall()
+      x=660
+
+      for i in tre:
+                    if x==44 or x==50:
+                        pdf.showPage()
+                        x=750
+                    else:
+                        if ps_cr=="before amount":
+                            pdf.drawString(28,x,str(i[1]))
+                      
+                            pdf.drawString(100,x,str(i[2]))
+                            pdf.drawString(168,x,str(i[3]))
+                            pdf.drawString(240,x,"fdhkhkk")
+                            pdf.drawString(315,x,str(i[5])) 
+                            pdf.drawString(380,x,str(crc)+str(i[8]))
+                            pdf.drawString(460,x,str(crc)+str(i[9]))
+                            pdf.drawString(522,x,str(crc)+str(i[10]))
+                            
+                        elif ps_cr=="after amount":
+                            pdf.drawString(28,x,str(i[1]))
+                            pdf.drawString(100,x,str(i[2]))
+                            pdf.drawString(168,x,str(i[3]))
+                            pdf.drawString(240,x,str(" "))
+                            pdf.drawString(315,x,str(i[5])) 
+                            pdf.drawString(380,x,str(i[8])+str(crc))
+                            pdf.drawString(460,x,str(i[9])+str(crc))
+                            pdf.drawString(522,x,str(i[10])+str(crc))
+                            
+                        elif ps_cr=="before amount with space":
+                            pdf.drawString(28,x,str(i[1]))
+                      
+                            pdf.drawString(100,x,str(i[2]))
+                            pdf.drawString(168,x,str(i[3]))
+                            pdf.drawString(240,x,str(""))
+                            pdf.drawString(315,x,str(i[5])) 
+                            pdf.drawString(380,x,str(crc)+" "+str(i[8]))
+                            pdf.drawString(460,x,str(crc)+" "+str(i[9]))
+                            pdf.drawString(522,x,str(crc)+" "+str(i[10]))
+                            
+                            
+                        elif ps_cr=="after amount with space":
+                            pdf.drawString(28,x,str(i[1]))
+                            pdf.drawString(100,x,str(i[2]))
+                            pdf.drawString(168,x,str(i[3]))
+                            pdf.drawString(240,x,str(" "))
+                            pdf.drawString(315,x,str(i[5])) 
+                            pdf.drawString(380,x,str(i[8])+" "+str(crc))
+                            pdf.drawString(460,x,str(i[9])+" "+str(crc))
+                            pdf.drawString(522,x,str(i[10])+" "+str(crc))
+                        
+                        else:
+                            pass
+                       
+                    count += 1
+                    x-=15
+
+
+      pdf.save()
+      win32api.ShellExecute(0,"","customer_Reports\Recurring_Invoice_Report.pdf",None,".",0)
+
 #-----------------------------------------------------------------------------------Customer Sms
 def cus_customersms():
   send_SMS=Toplevel()
@@ -1612,14 +1694,24 @@ def cus_import_customer():
     top.mainloop()
 #-----------------------------------------------------------------------------------Export Customer
 def cus_export_customer():
-    name = askopenfilename(filetypes=[('Excel', ('*.xls', '*.xslm', '*.xlsx')),('CSV', '*.csv',)])
-    if name:
-        if name.endswith('.csv'):
-            df = pd.read_csv(name)
-        else:
-            df = pd.read_excel(name)
-
-            filename = name
+   
+    cols = ["customerid","ccategory","cname","caddress","ctel","cfax","cemail","ccontact","cshipname","cshipaddress","cshiptel","cshipfax","cshipcontact","specialtax1","specialtax2","discountrate","cshipemail","vatregnumber","country","city", "taxexempt","cactive"] # Your column headings here
+    path = filedialog.asksaveasfilename(initialdir=os.getcwd,title="Save File",filetypes=[('CSV File', '*.csv',)],defaultextension=".csv")
+      
+    lst = []
+    with open(path, "w", newline='') as myfile:
+      csvwriter = csv.writer(myfile, delimiter=',')
+      sql = 'select 	customerid ,category,businessname,businessaddress,cptelno,cpfax,cpemail,	contactperson,shipname,shipaddress,shipcptelno,shipcpfax,shipcontactperson,specifictax1,specifictax1,discount,shipcpemail,country,country,city, taxexempt,status from customer'
+         
+      fbcursor.execute(sql)
+      pandsdata = fbcursor.fetchall()
+      for row_id in pandsdata:
+              row = row_id
+              lst.append(row)
+      lst = list(map(list,lst))
+      lst.insert(0,cols)
+      for row in lst:
+          csvwriter.writerow(row)
 #-----------------------------------------------------------------------------------Search Customer
 def cus_search_customers():
     top = Toplevel()  
@@ -1690,184 +1782,336 @@ def cus_refresh_customers(self):
 
 ################################################################################((function For Invoice bottom table))
 # #-------------------------------------------------------------------------------bottom tree invoice
-def cus_inv_btm():
-  
-  cus_inv2_s=ttk.Style()
-  cus_inv2_s.configure('Treeview.Heading',background='white')
-  cus_inv2_tree=ttk.Treeview(tab7,selectmode='browse')
-  
-  cus_inv2_tree.place(x=0,y=415,height=280)
-  cus_inv2_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
-  cus_inv2_vertical_bar.place(x=1083,y=415,height=280)
-  cus_inv2_tree["columns"]=("1","2","3","4","5","6","7","8","9")
-  cus_inv2_tree["show"]='headings'
+def cus_inv_btm1():
+    cus_inv2_s=ttk.Style()
+    cus_inv2_s.configure('Treeview.Heading',background='white')
+    cus_inv2_tree=ttk.Treeview(tab7,selectmode='browse')
+    
+    cus_inv2_tree.place(x=0,y=415,height=280)
+    cus_inv2_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_inv2_vertical_bar.place(x=1083,y=415,height=280)
+    cus_inv2_tree["columns"]=("1","2","3","4","5","6","7","8","9")
+    cus_inv2_tree["show"]='headings'
 
 
-  cus_inv2_tree.column("1",width=20,anchor='c')
-  cus_inv2_tree.column("2",width=140,anchor='c')
-  cus_inv2_tree.column("3",width=110,anchor='c')
-  cus_inv2_tree.column("4",width=110,anchor='c')
-  cus_inv2_tree.column("5",width=120,anchor='c')
-  cus_inv2_tree.column("6",width=120,anchor='c')
-  cus_inv2_tree.column("7",width=160,anchor='c')
-  cus_inv2_tree.column("8",width=160,anchor='c')
-  cus_inv2_tree.column("9",width=140,anchor='c')
-  cus_inv2_tree.heading("1",text="")
-  cus_inv2_tree.heading("2",text="#ID")
-  cus_inv2_tree.heading("3",text="Issue Date")
-  cus_inv2_tree.heading("4",text="Due Date")
-  cus_inv2_tree.heading("5",text="Recurring")
-  cus_inv2_tree.heading("6",text="Status")
-  cus_inv2_tree.heading("7",text="Invoice Total")
-  cus_inv2_tree.heading("8",text="Total Paid")
-  cus_inv2_tree.heading("9",text="Balance")
-# #-------------------------------------------------------------------------------bottom tree order
+    cus_inv2_tree.column("1",width=20,anchor='c')
+    cus_inv2_tree.column("2",width=140,anchor='c')
+    cus_inv2_tree.column("3",width=110,anchor='c')
+    cus_inv2_tree.column("4",width=110,anchor='c')
+    cus_inv2_tree.column("5",width=120,anchor='c')
+    cus_inv2_tree.column("6",width=120,anchor='c')
+    cus_inv2_tree.column("7",width=160,anchor='c')
+    cus_inv2_tree.column("8",width=160,anchor='c')
+    cus_inv2_tree.column("9",width=140,anchor='c')
+    cus_inv2_tree.heading("1",text="")
+    cus_inv2_tree.heading("2",text="#ID")
+    cus_inv2_tree.heading("3",text="Issue Date")
+    cus_inv2_tree.heading("4",text="Due Date")
+    cus_inv2_tree.heading("5",text="Recurring")
+    cus_inv2_tree.heading("6",text="Status")
+    cus_inv2_tree.heading("7",text="Invoice Total")
+    cus_inv2_tree.heading("8",text="Total Paid")
+    cus_inv2_tree.heading("9",text="Balance")
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+
+    cus_main_table_sql="select * from invoice where businessname=%s"
+    cus_main_table_sql_val=(cus_id,)
+    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+    main_tb_val=fbcursor.fetchall()
+    count_cus=0
+    for i in main_tb_val:
+      cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3]," ",i[4],i[8],i[9],i[10]))
+      count_cus +=1
+def cus_inv_btm(event):
+    cus_inv2_s=ttk.Style()
+    cus_inv2_s.configure('Treeview.Heading',background='white')
+    cus_inv2_tree=ttk.Treeview(tab7,selectmode='browse')
+    
+    cus_inv2_tree.place(x=0,y=415,height=280)
+    cus_inv2_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_inv2_vertical_bar.place(x=1083,y=415,height=280)
+    cus_inv2_tree["columns"]=("1","2","3","4","5","6","7","8","9")
+    cus_inv2_tree["show"]='headings'
+
+
+    cus_inv2_tree.column("1",width=20,anchor='c')
+    cus_inv2_tree.column("2",width=140,anchor='c')
+    cus_inv2_tree.column("3",width=110,anchor='c')
+    cus_inv2_tree.column("4",width=110,anchor='c')
+    cus_inv2_tree.column("5",width=120,anchor='c')
+    cus_inv2_tree.column("6",width=120,anchor='c')
+    cus_inv2_tree.column("7",width=160,anchor='c')
+    cus_inv2_tree.column("8",width=160,anchor='c')
+    cus_inv2_tree.column("9",width=140,anchor='c')
+    cus_inv2_tree.heading("1",text="")
+    cus_inv2_tree.heading("2",text="#ID")
+    cus_inv2_tree.heading("3",text="Issue Date")
+    cus_inv2_tree.heading("4",text="Due Date")
+    cus_inv2_tree.heading("5",text="Recurring")
+    cus_inv2_tree.heading("6",text="Status")
+    cus_inv2_tree.heading("7",text="Invoice Total")
+    cus_inv2_tree.heading("8",text="Total Paid")
+    cus_inv2_tree.heading("9",text="Balance")
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+
+    cus_main_table_sql="select * from invoice where businessname=%s"
+    cus_main_table_sql_val=(cus_id,)
+    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+    main_tb_val=fbcursor.fetchall()
+    count_cus=0
+    for i in main_tb_val:
+      cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3]," ",i[4],i[8],i[9],i[10]))
+      count_cus +=1
+  # #-------------------------------------------------------------------------------bottom tree order
 def cus_ord_btm():
-  cus_ord_s=ttk.Style()
-  cus_ord_s.configure('Treeview.Heading',background='white')
-  cus_ord_tree=ttk.Treeview(tab7,selectmode='browse')
-  cus_ord_tree.place(x=0,y=415,height=280)
-  cus_ord_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
-  cus_ord_vertical_bar.place(x=1083,y=415,height=280)
-  cus_ord_tree["columns"]=("1","2","3","4","5","6","7","8","9")
-  cus_ord_tree["show"]='headings'
+    cus_ord_s=ttk.Style()
+    cus_ord_s.configure('Treeview.Heading',background='white')
+    cus_ord_tree=ttk.Treeview(tab7,selectmode='browse')
+    cus_ord_tree.place(x=0,y=415,height=280)
+    cus_ord_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_ord_vertical_bar.place(x=1083,y=415,height=280)
+    cus_ord_tree["columns"]=("1","2","3","4","5","6","7","8","9")
+    cus_ord_tree["show"]='headings'
 
 
-  cus_ord_tree.column("1",width=20,anchor='c')
-  cus_ord_tree.column("2",width=140,anchor='c')
-  cus_ord_tree.column("3",width=110,anchor='c')
-  cus_ord_tree.column("4",width=110,anchor='c')
-  cus_ord_tree.column("5",width=120,anchor='c')
-  cus_ord_tree.column("6",width=120,anchor='c')
-  cus_ord_tree.column("7",width=160,anchor='c')
-  cus_ord_tree.column("8",width=160,anchor='c')
-  cus_ord_tree.column("9",width=140,anchor='c')
-  cus_ord_tree.heading("1",text="")
-  cus_ord_tree.heading("2",text="#ID")
-  cus_ord_tree.heading("3",text="Issue Date")
-  cus_ord_tree.heading("4",text="Due Date")
-  cus_ord_tree.heading("5",text="Emailed on")
-  cus_ord_tree.heading("6",text="Print on")
-  cus_ord_tree.heading("7",text="Subtotal")
-  cus_ord_tree.heading("8",text="Extra Cost")
-  cus_ord_tree.heading("9",text="Order Total")
-# #-------------------------------------------------------------------------------bottom tree Estimates
+    cus_ord_tree.column("1",width=20,anchor='c')
+    cus_ord_tree.column("2",width=140,anchor='c')
+    cus_ord_tree.column("3",width=110,anchor='c')
+    cus_ord_tree.column("4",width=110,anchor='c')
+    cus_ord_tree.column("5",width=120,anchor='c')
+    cus_ord_tree.column("6",width=120,anchor='c')
+    cus_ord_tree.column("7",width=160,anchor='c')
+    cus_ord_tree.column("8",width=160,anchor='c')
+    cus_ord_tree.column("9",width=140,anchor='c')
+    cus_ord_tree.heading("1",text="")
+    cus_ord_tree.heading("2",text="#ID")
+    cus_ord_tree.heading("3",text="Issue Date")
+    cus_ord_tree.heading("4",text="Due Date")
+    cus_ord_tree.heading("5",text="Emailed on")
+    cus_ord_tree.heading("6",text="Print on")
+    cus_ord_tree.heading("7",text="Subtotal")
+    cus_ord_tree.heading("8",text="Extra Cost")
+    cus_ord_tree.heading("9",text="Order Total")
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+
+    cus_main_table_sql="select * from orders where businessname=%s"
+    cus_main_table_sql_val=(cus_id,)
+    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+    main_tb_val=fbcursor.fetchall()
+    count_cus=0
+    for i in main_tb_val:
+      cus_ord_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[1],i[2],i[5],i[6],i[26],i[10],i[8]))
+      count_cus +=1
+  # #-------------------------------------------------------------------------------bottom tree Estimates
 def cus_est_btm():
-  cus_est_s=ttk.Style()
-  cus_est_s.configure('Treeview.Heading',background='white')
-  cus_est_tree=ttk.Treeview(tab7,selectmode='browse')
-  cus_est_tree.place(x=0,y=415,height=280)
-  cus_est_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
-  cus_est_vertical_bar.place(x=1083,y=415,height=280)
-  cus_est_tree["columns"]=("1","2","3","4","5","6","7","8","9")
-  cus_est_tree["show"]='headings'
+    cus_est_s=ttk.Style()
+    cus_est_s.configure('Treeview.Heading',background='white')
+    cus_est_tree=ttk.Treeview(tab7,selectmode='browse')
+    cus_est_tree.place(x=0,y=415,height=280)
+    cus_est_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_est_vertical_bar.place(x=1083,y=415,height=280)
+    cus_est_tree["columns"]=("1","2","3","4","5","6","7","8","9")
+    cus_est_tree["show"]='headings'
 
 
-  cus_est_tree.column("1",width=20,anchor='c')
-  cus_est_tree.column("2",width=140,anchor='c')
-  cus_est_tree.column("3",width=110,anchor='c')
-  cus_est_tree.column("4",width=110,anchor='c')
-  cus_est_tree.column("5",width=120,anchor='c')
-  cus_est_tree.column("6",width=120,anchor='c')
-  cus_est_tree.column("7",width=160,anchor='c')
-  cus_est_tree.column("8",width=160,anchor='c')
-  cus_est_tree.column("9",width=140,anchor='c')
-  cus_est_tree.heading("1",text="")
-  cus_est_tree.heading("2",text="#ID")
-  cus_est_tree.heading("3",text="Issue Date")
-  cus_est_tree.heading("4",text="Due Date")
-  cus_est_tree.heading("5",text="Emailed on")
-  cus_est_tree.heading("6",text="Print on")
-  cus_est_tree.heading("7",text="Subtotal")
-  cus_est_tree.heading("8",text="Extra Cost")
-  cus_est_tree.heading("9",text="Estimate Total")
-# #-------------------------------------------------------------------------------bottom tree statement
+    cus_est_tree.column("1",width=20,anchor='c')
+    cus_est_tree.column("2",width=140,anchor='c')
+    cus_est_tree.column("3",width=110,anchor='c')
+    cus_est_tree.column("4",width=110,anchor='c')
+    cus_est_tree.column("5",width=120,anchor='c')
+    cus_est_tree.column("6",width=120,anchor='c')
+    cus_est_tree.column("7",width=160,anchor='c')
+    cus_est_tree.column("8",width=160,anchor='c')
+    cus_est_tree.column("9",width=140,anchor='c')
+    cus_est_tree.heading("1",text="")
+    cus_est_tree.heading("2",text="#ID")
+    cus_est_tree.heading("3",text="Issue Date")
+    cus_est_tree.heading("4",text="Due Date")
+    cus_est_tree.heading("5",text="Emailed on")
+    cus_est_tree.heading("6",text="Print on")
+    cus_est_tree.heading("7",text="Subtotal")
+    cus_est_tree.heading("8",text="Extra Cost")
+    cus_est_tree.heading("9",text="Estimate Total")
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+
+    cus_main_table_sql="select * from estimate where businessname=%s"
+    cus_main_table_sql_val=(cus_id,)
+    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+    main_tb_val=fbcursor.fetchall()
+    count_cus=0
+    for i in main_tb_val:
+      cus_est_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3],i[5],i[6],i[8],i[12],i[8]))
+      count_cus +=1
+  # #-------------------------------------------------------------------------------bottom tree statement
 def cus_stm_btm():
-  cus_stm_s=ttk.Style()
-  cus_stm_s.configure('Treeview.Heading',background='white')
-  cus_stm_tree=ttk.Treeview(tab7,selectmode='browse')
-  cus_stm_tree.place(x=0,y=415,height=280)
-  cus_stm_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
-  cus_stm_vertical_bar.place(x=1083,y=415,height=280)
-  cus_stm_tree["columns"]=("1","2","3","4","5","6","7","8","9")
-  cus_stm_tree["show"]='headings'
+    cus_stm_s=ttk.Style()
+    cus_stm_s.configure('Treeview.Heading',background='white')
+    cus_stm_tree=ttk.Treeview(tab7,selectmode='browse')
+    cus_stm_tree.place(x=0,y=415,height=280)
+    cus_stm_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_stm_vertical_bar.place(x=1083,y=415,height=280)
+    cus_stm_tree["columns"]=("1","2","3","4","5","6","7","8","9")
+    cus_stm_tree["show"]='headings'
 
 
-  cus_stm_tree.column("1",width=20,anchor='c')
-  cus_stm_tree.column("2",width=140,anchor='c')
-  cus_stm_tree.column("3",width=110,anchor='c')
-  cus_stm_tree.column("4",width=110,anchor='c')
-  cus_stm_tree.column("5",width=120,anchor='c')
-  cus_stm_tree.column("6",width=120,anchor='c')
-  cus_stm_tree.column("7",width=160,anchor='c')
-  cus_stm_tree.column("8",width=160,anchor='c')
-  cus_stm_tree.column("9",width=140,anchor='c')
-  cus_stm_tree.heading("1",text="")
-  cus_stm_tree.heading("2",text="#ID")
-  cus_stm_tree.heading("3",text="Issue Date")
-  cus_stm_tree.heading("4",text="Due Date")
-  cus_stm_tree.heading("5",text="Recurring")
-  cus_stm_tree.heading("6",text="Status")
-  cus_stm_tree.heading("7",text="Invoice Total")
-  cus_stm_tree.heading("8",text="Total Paid")
-  cus_stm_tree.heading("9",text="Balance")
-# #-------------------------------------------------------------------------------bottom tree payment
+    cus_stm_tree.column("1",width=20,anchor='c')
+    cus_stm_tree.column("2",width=140,anchor='c')
+    cus_stm_tree.column("3",width=110,anchor='c')
+    cus_stm_tree.column("4",width=110,anchor='c')
+    cus_stm_tree.column("5",width=120,anchor='c')
+    cus_stm_tree.column("6",width=120,anchor='c')
+    cus_stm_tree.column("7",width=160,anchor='c')
+    cus_stm_tree.column("8",width=160,anchor='c')
+    cus_stm_tree.column("9",width=140,anchor='c')
+    cus_stm_tree.heading("1",text="")
+    cus_stm_tree.heading("2",text="#ID")
+    cus_stm_tree.heading("3",text="Issue Date")
+    cus_stm_tree.heading("4",text="Due Date")
+    cus_stm_tree.heading("5",text="Recurring")
+    cus_stm_tree.heading("6",text="Status")
+    cus_stm_tree.heading("7",text="Invoice Total")
+    cus_stm_tree.heading("8",text="Total Paid")
+    cus_stm_tree.heading("9",text="Balance")
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+
+    cus_main_table_sql="select * from invoice where businessname=%s"
+    cus_main_table_sql_val=(cus_id,)
+    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+    main_tb_val=fbcursor.fetchall()
+    count_cus=0
+    for i in main_tb_val:
+      cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3]," ",i[4],i[8],i[9],i[10]))
+      count_cus +=1
+  # #-------------------------------------------------------------------------------bottom tree payment
 def cus_pym_btm():
-  cus_pym_s=ttk.Style()
-  cus_pym_s.configure('Treeview.Heading',background='white')
-  cus_pym_tree=ttk.Treeview(tab7,selectmode='browse')
-  cus_pym_tree.place(x=0,y=415,height=280)
-  cus_pym_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
-  cus_pym_vertical_bar.place(x=1083,y=415,height=280)
-  cus_pym_tree["columns"]=("1","2","3","4","5","6","7")
-  cus_pym_tree["show"]='headings'
+    cus_pym_s=ttk.Style()
+    cus_pym_s.configure('Treeview.Heading',background='white')
+    cus_pym_tree=ttk.Treeview(tab7,selectmode='browse')
+    cus_pym_tree.place(x=0,y=415,height=280)
+    cus_pym_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_pym_vertical_bar.place(x=1083,y=415,height=280)
+    cus_pym_tree["columns"]=("1","2","3","4","5","6","7")
+    cus_pym_tree["show"]='headings'
 
 
-  cus_pym_tree.column("1",width=20,anchor='c')
-  cus_pym_tree.column("2",width=170,anchor='c')
-  cus_pym_tree.column("3",width=160,anchor='c')
-  cus_pym_tree.column("4",width=110,anchor='c')
-  cus_pym_tree.column("5",width=160,anchor='c')
-  cus_pym_tree.column("6",width=300,anchor='c')
-  cus_pym_tree.column("7",width=160,anchor='c')
-  cus_pym_tree.heading("1",text="")
-  cus_pym_tree.heading("2",text="Invoice ID")
-  cus_pym_tree.heading("3",text="Payment Id")
-  cus_pym_tree.heading("4",text="Payment Date")
-  cus_pym_tree.heading("5",text="Paid By")
-  cus_pym_tree.heading("6",text="Description")
-  
-  cus_pym_tree.heading("7",text="Amount")
-# #-------------------------------------------------------------------------------bottom tree purchase order
+    cus_pym_tree.column("1",width=20,anchor='c')
+    cus_pym_tree.column("2",width=170,anchor='c')
+    cus_pym_tree.column("3",width=160,anchor='c')
+    cus_pym_tree.column("4",width=110,anchor='c')
+    cus_pym_tree.column("5",width=160,anchor='c')
+    cus_pym_tree.column("6",width=300,anchor='c')
+    cus_pym_tree.column("7",width=160,anchor='c')
+    cus_pym_tree.heading("1",text="")
+    cus_pym_tree.heading("2",text="Invoice ID")
+    cus_pym_tree.heading("3",text="Payment Id")
+    cus_pym_tree.heading("4",text="Payment Date")
+    cus_pym_tree.heading("5",text="Paid By")
+    cus_pym_tree.heading("6",text="Description")
+    cus_pym_tree.heading("7",text="Amount")
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+
+    cus_main_table_sql="select * from invoice where businessname=%s"
+    cus_main_table_sql_val=(cus_id,)
+    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+    main_tb_val=fbcursor.fetchall()
+    
+    count_cus=0
+    for j in main_tb_val:
+        cus_sql="select * from payments where invoiceid =%s"
+        cus_sql_val=(j[0],)
+        fbcursor.execute(cus_sql,cus_sql_val)
+        pym_tb=fbcursor.fetchall()
+        for i in pym_tb:
+          cus_pym_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],j[34],i[12],j[18],i[9],i[14]))
+          count_cus += 1
+        
+        
+    
+  # #-------------------------------------------------------------------------------bottom tree purchase order
 def cus_pod_btm():
-  cus_por_s=ttk.Style()
-  cus_por_s.configure('Treeview.Heading',background='white')
-  cus_por_tree=ttk.Treeview(tab7,selectmode='browse')
-  cus_por_tree.place(x=0,y=415,height=280)
-  cus_por_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
-  cus_por_vertical_bar.place(x=1083,y=415,height=280)
-  cus_por_tree["columns"]=("1","2","3","4","5","6","7")
-  cus_por_tree["show"]='headings'
+    cus_por_s=ttk.Style()
+    cus_por_s.configure('Treeview.Heading',background='white')
+    cus_por_tree=ttk.Treeview(tab7,selectmode='browse')
+    cus_por_tree.place(x=0,y=415,height=280)
+    cus_por_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_por_vertical_bar.place(x=1083,y=415,height=280)
+    cus_por_tree["columns"]=("1","2","3","4","5","6","7")
+    cus_por_tree["show"]='headings'
 
 
-  cus_por_tree.column("1",width=20,anchor='c')
-  cus_por_tree.column("2",width=170,anchor='c')
-  cus_por_tree.column("3",width=130,anchor='c')
-  cus_por_tree.column("4",width=130,anchor='c')
-  cus_por_tree.column("5",width=300,anchor='c')
-  cus_por_tree.column("6",width=150,anchor='c')
-  cus_por_tree.column("7",width=180,anchor='c')
-  cus_por_tree.heading("1",text="")
-  cus_por_tree.heading("2",text="ID#")
-  cus_por_tree.heading("3",text="Issue Date")
-  cus_por_tree.heading("4",text="Due Date")
-  cus_por_tree.heading("5",text="Vendor")
-  cus_por_tree.heading("6",text="Status")
+    cus_por_tree.column("1",width=20,anchor='c')
+    cus_por_tree.column("2",width=170,anchor='c')
+    cus_por_tree.column("3",width=130,anchor='c')
+    cus_por_tree.column("4",width=130,anchor='c')
+    cus_por_tree.column("5",width=300,anchor='c')
+    cus_por_tree.column("6",width=150,anchor='c')
+    cus_por_tree.column("7",width=180,anchor='c')
+    cus_por_tree.heading("1",text="")
+    cus_por_tree.heading("2",text="ID#")
+    cus_por_tree.heading("3",text="Issue Date")
+    cus_por_tree.heading("4",text="Due Date")
+    cus_por_tree.heading("5",text="Vendor")
+    cus_por_tree.heading("6",text="Status")
 
-  cus_por_tree.heading("7",text="P.Order Total")
+    cus_por_tree.heading("7",text="P.Order Total")
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+
+    cus_main_table_sql="select * from porder where businessname=%s"
+    cus_main_table_sql_val=(cus_id,)
+    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+    main_tb_val=fbcursor.fetchall()
+    count_cus=0
+    for i in main_tb_val:
+      cus_por_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3],i[4],i[5],i[9]))
+      count_cus +=1
+  #----------------------------------------------------------------------------------Filter Section
+def ct_filter():
+  pass
+
+
+
+
 ####################################################################################################################
+
+global cus_main_tree
+cus_main_s=ttk.Style()
+cus_main_s.configure('Treeview.Heading',background='white')
+cus_main_tree=ttk.Treeview(tab7,selectmode='browse')
+cus_main_tree.place(x=0,y=95,height=280)
+cus_main_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+cus_main_vertical_bar.place(x=1083,y=95,height=280)
+cus_main_tree["columns"]=("1","2","3","4","5","6","7","8")
+cus_main_tree["show"]='headings'
+cus_main_tree.column("1",width=30,anchor='c')
+cus_main_tree.column("2",width=140,anchor='c')
+cus_main_tree.column("3",width=190,anchor='c')
+cus_main_tree.column("4",width=176,anchor='c')
+cus_main_tree.column("5",width=176,anchor='c')
+cus_main_tree.column("6",width=120,anchor='c')
+cus_main_tree.column("7",width=130,anchor='c')
+cus_main_tree.column("8",width=120,anchor='c')
+cus_main_tree.heading("1",text="")
+cus_main_tree.heading("2",text="Customer ID")
+cus_main_tree.heading("3",text="Category")
+cus_main_tree.heading("4",text="Customer Name")
+cus_main_tree.heading("5",text="Contact Persion")
+cus_main_tree.heading("6",text="Customer Tel.")
+cus_main_tree.heading("7",text="SMS Number")
+cus_main_tree.heading("8",text="Type")
+
+cus_main_table_sql="select * from customer"
+fbcursor.execute(cus_main_table_sql)
+main_tb_val=fbcursor.fetchall()
+count_cus=0
+
+for i in main_tb_val:
+    cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[4],i[8],i[10],i[12],i[22]))
+    count_cus +=1
+cus_main_tree.bind('<<TreeviewSelect>>',cus_inv_btm)
+
+
 #----------------------------------------------------------------------------Button bottam table-----
-cus_btn=Button(tab7, text="Invoices", width=15, command=lambda:cus_inv_btm())
+cus_btn=Button(tab7, text="Invoices", width=15, command=lambda:cus_inv_btm1())
 cus_btn.place(x=7, y=390)
 cus_btn=Button(tab7, text="Orders", width=15, command=lambda:cus_ord_btm())
 cus_btn.place(x=125, y=390)
@@ -1948,6 +2192,7 @@ cus_tree1["columns"]=("1")
 cus_tree1["show"]='headings'
 cus_tree1.column("1",width=254,anchor='c')
 cus_tree1.heading("1",text="View filter by category")
+
 cus_listbox = Listbox(tab7,height =8,  
                       width = 29,  
                       bg = "white",
@@ -1960,7 +2205,7 @@ cus_listbox.insert(2, "  View only Client Type")
 cus_listbox.insert(3, "  View only Vendor Type")
 
 cus_listbox.place(x=1099,y=120,height=545,width=254)
-
+# cus_listbox.bind('<<ListboxSelect>>', ct_filter)
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
