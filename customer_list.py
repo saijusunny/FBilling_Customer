@@ -252,7 +252,7 @@ cus_pn.pack(side="left", padx=5)
 
 usr_rfs= PIL.Image.open("images/refresh.png")
 cus_refreshcustomerIcon=ImageTk.PhotoImage(usr_rfs)
-cus_refreshcustomerLabel = Button(CusmidFrame,compound="top", command=lambda:ct_filter(),text="Refresh\ncustomer list",relief=RAISED,               image=cus_refreshcustomerIcon, font=("arial", 8),bg="#f8f8f2", fg="black", height=55, bd=1, width=55)
+cus_refreshcustomerLabel = Button(CusmidFrame,compound="top", command=lambda:cus_refresh_customers(),text="Refresh\ncustomer list",relief=RAISED,               image=cus_refreshcustomerIcon, font=("arial", 8),bg="#f8f8f2", fg="black", height=55, bd=1, width=55)
 cus_refreshcustomerLabel.pack(side="left")
 
 cus_invoi1label = Label(customermain, text="Customers", font=("arial", 18), bg="#f8f8f2")
@@ -263,10 +263,36 @@ cus_invoi1label.pack(side="left", padx=(825,0))
 cus_invoi1label = Label(customermain, text="Category ", font=("arial", 15), bg="#f8f8f2")
 cus_invoi1label.pack(side="right", padx=(0,160))
 
+def cus_dft(event):
+  print(cus_fltr.get())
+  if cus_fltr.get()=="Default":
+    for record in cus_main_tree.get_children():
+      cus_main_tree.delete(record)
+    table_sql='select * from customer where category="Default"'
+    fbcursor.execute(table_sql)
+    tb_val=fbcursor.fetchall()
+    count_cus=0
+
+    for i in tb_val:
+      cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+      count_cus +=1
+  else:
+    for record in cus_main_tree.get_children():
+      cus_main_tree.delete(record)
+    cus_main_table_sql="select * from customer"
+    fbcursor.execute(cus_main_table_sql)
+    main_tb_val=fbcursor.fetchall()
+    count_cus=0
+
+    for i in main_tb_val:
+      cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+      count_cus +=1
+
 cus_fltr = StringVar()
 cus_flt=ttk.Combobox(customermain, textvariable=cus_fltr)
 cus_flt.place(x=1210, y=75)
-cus_flt["values"]=("Default")
+cus_flt["values"]=("All","Default")
+cus_flt.bind('<<ComboboxSelected>>', cus_dft)
 cus_flt.current(0)
 
 
@@ -301,7 +327,7 @@ cus_flt.current(0)
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$((Top Button Functions))
 #---------------------------------------------------------------------------------Mail
 def cus_send_mails():
-
+      
       cus_sender_email = "saijuinfox@gmail.com"    
       cus_sender_password = "8848937577" 
 
@@ -394,10 +420,21 @@ def cus_addemail_order():
           cus_email_from = StringVar()
           cus_email_pswrd = StringVar()
           cus_carcopyem_address = StringVar()
-
+          
+          
           cus_lbl_emailtoaddr=Label(cus_messagelbframe, text="Email to address").place(x=5, y=5)
           cus_emailtoent=Entry(cus_messagelbframe, width=50,textvariable=cus_email_address)
           cus_emailtoent.place(x=120, y=5)
+          cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
+          
+          if cus_id is None:
+            pass
+          else:
+            sqrty="select cpemail from customer where customerno=%s"
+            sqrty_val=(cus_id,)
+            fbcursor.execute(sqrty,sqrty_val)
+            dtre=fbcursor.fetchone()
+            cus_emailtoent.insert(0,dtre[0])
         
           cus_sendemail_btn=Button(cus_messagelbframe, text="Send Email", width=10, height=1, command=cus_send_mails).place(x=600, y=10)
 
@@ -710,6 +747,8 @@ def cus_addemail_order():
 #------------------------------------------------------------------------------------Add Customer
 def cus_add_customer():
   #-------------------------------------------------------------------------------Add to database
+  def cancel_add():
+    add_customer.destroy()
   def cus_add_cst():
     cst_id=cu_idr.get()#id
     cus_bs_nm=bnm_cus.get()#bs name
@@ -722,6 +761,7 @@ def cus_add_customer():
     cus_bs_mob=bs_mobi.get()#bs mob
     cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
     cus_bs_spc_tax=cus_sp_tx.get()# specific tax
+    cus_bs_spc_tax2=cus_sp_tx2.get()# specific tax
     cus_bs_dis=cus_sp_disc.get()# discount
     cus_bs_ctr=bs_cus_ct.get()# customer category
 
@@ -737,20 +777,30 @@ def cus_add_customer():
     cus_shp_cntry=cus_sh_coun.get()#contry
     cus_shp_city=cus_sh_cty.get()#city
     cus_shp_nte=cus_nt.get()
-    cus_ed_tbles="select * from customer where customerid=%s"
+    cus_ed_tbles="select * from customer where customerno=%s"
     cus_ed_tbles_valuz=(cst_id,)
     fbcursor.execute(cus_ed_tbles,cus_ed_tbles_valuz)
     cus_ins_val=fbcursor.fetchone()
 
     if cus_ins_val is None:
-      cus_tbl_add="INSERT INTO customer(customerid,category,status,businessname,businessaddress,shipname,shipaddress,contactperson,cpemail,cptelno,cpfax,cpmobileforsms,shipcontactperson,shipcpemail,shipcptelno,shipcpfax,taxexempt,specifictax1,discount,country,city,customertype,notes)VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)" #adding values into db
-      cus_tbl_add_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte)
+      cus_tbl_add="INSERT INTO customer(customerno,category,status,businessname,businessaddress,shipname,shipaddress,contactperson,cpemail,cptelno,cpfax,cpmobileforsms,shipcontactperson,shipcpemail,shipcptelno,shipcpfax,taxexempt,specifictax1,discount,country,city,customertype,notes,specifictax2)VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)" #adding values into db
+      cus_tbl_add_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte,cus_bs_spc_tax2)
       fbcursor.execute(cus_tbl_add,cus_tbl_add_val)
       fbilldb.commit()
-     
+      for record in cus_main_tree.get_children():
+        cus_main_tree.delete(record)
+      cus_main_table_sql="select * from customer"
+      fbcursor.execute(cus_main_table_sql)
+      main_tb_val=fbcursor.fetchall()
+      count_cus=0
+
+      for i in main_tb_val:
+        cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+        count_cus +=1
+      add_customer.destroy()
     else:
-      messagebox.askyesno("Already Exists", "Customer ID value already exists. Duplicate value not allowed")
-      cus_add_customer()
+        messagebox.askyesno("Already Exists", "Customer ID value already exists. Duplicate value not allowed")
+        cus_add_customer()
 
   add_customer = Toplevel()  
   add_customer.title("Add new Customer ")
@@ -842,16 +892,32 @@ def cus_add_customer():
   Labelframe6.place(x=10,y=317,width=340,height=80)
   cus_ds_chk = StringVar()
   cus_sp_tx=IntVar()
+  cus_sp_tx2=IntVar()
   cus_sp_disc=IntVar()
   chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = cus_ds_chk, onvalue = 1, offvalue = 0, font=("arial", 8))
   chkbtn1.place(x=10,y=6)
 
-  a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+  
   a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
+  
   cus_sp_disc = IntVar(Labelframe6, value='0')
-  b11=Entry(Labelframe6, textvariable=cus_sp_tx).place(x=250,y=7,width=70)
+  
   b12=Entry(Labelframe6,textvariable=cus_sp_disc).place(x=80,y=30,width=70)
-
+  #-----------------------------------------------------------------------------------------------tax2
+  swt='select taxtype from company'
+  fbcursor.execute(swt)
+  fdt=fbcursor.fetchone()
+  print(fdt[0])
+  if fdt[0]=='2':
+    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+    b11=Entry(Labelframe6, textvariable=cus_sp_tx).place(x=250,y=7,width=70)
+    b14=Entry(Labelframe6,textvariable=cus_sp_tx2).place(x=250,y=30,width=70)
+    a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
+  elif fdt[0]=='1':
+    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+    b11=Entry(Labelframe6, textvariable=cus_sp_tx).place(x=250,y=7,width=70)
+  elif fdt[0]=='0':
+    pass
 
   Labelframe7=LabelFrame(Labelframe1,text="Customer type")
   Labelframe7.place(x=10,y=405,width=340,height=90)
@@ -893,20 +959,19 @@ def cus_add_customer():
   scrollbar_cus_nt.place(x=295,y=10)
 
   btn1=Button(add_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_add_cst(),text="  OK").place(x=20, y=545)
-  btn2=Button(add_customer,width=80,compound = LEFT,image=cancel,text="  Cancel").place(x=665, y=545)
+  btn2=Button(add_customer,width=80,compound = LEFT,image=cancel,text="  Cancel",command=cancel_add).place(x=665, y=545)
   add_customer.mainloop()
 #-----------------------------------------------------------------------------------Edit Customer
 def cus_edit_customer():
   cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
   print(cus_id)
-  cus_ed_tbles="select * from customer where customerid=%s"
+  cus_ed_tbles="select * from customer where customerno=%s"
   cus_ed_tbles_valuz=(cus_id,)
   fbcursor.execute(cus_ed_tbles,cus_ed_tbles_valuz)
   cus_ins_val=fbcursor.fetchone()
-  
 
-  
-  
+  def cancel_edt():
+    edit_customer.destroy()
 
   def cus_edit_cst():
     cst_id=cu_idr.get()#id
@@ -936,19 +1001,29 @@ def cus_edit_customer():
     cus_shp_city=cus_sh_cty.get()#city
     cus_shp_nte=cus_nt.get()
 
-    cus_tbl_edit="update customer set customerid=%s,category=%s,status=%s,businessname=%s,businessaddress=%s,shipname=%s,shipaddress=%s,contactperson=%s,cpemail=%s,cptelno=%s,cpfax=%s,cpmobileforsms=%s,shipcontactperson=%s,shipcpemail=%s,shipcptelno=%s,shipcpfax=%s,taxexempt=%s,specifictax1=%s,discount=%s,country=%s,city=%s,customertype=%s,notes=%s where customerid = %s" #adding values into db
+    cus_tbl_edit="update customer set customerno=%s,category=%s,status=%s,businessname=%s,businessaddress=%s,shipname=%s,shipaddress=%s,contactperson=%s,cpemail=%s,cptelno=%s,cpfax=%s,cpmobileforsms=%s,shipcontactperson=%s,shipcpemail=%s,shipcptelno=%s,shipcpfax=%s,taxexempt=%s,specifictax1=%s,discount=%s,country=%s,city=%s,customertype=%s,notes=%s, specifictax2=%s where customerno = %s" #adding values into db
     cus_tbl_edit_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte,cus_id)
-    fbcursor.execute(cus_tbl_edit,cus_tbl_edit_val)
+    fbcursor.execute(cus_tbl_edit,cus_sp_tx2,cus_tbl_edit_val)
     fbilldb.commit()
-    # add_customer.distroy
-    
+    cus_main_s=ttk.Style()
+    for record in cus_main_tree.get_children():
+      cus_main_tree.delete(record)
+    cus_main_table_sql="select * from customer"
+    fbcursor.execute(cus_main_table_sql)
+    main_tb_val=fbcursor.fetchall()
+    count_cus=0
 
-  add_customer = Toplevel()  
-  add_customer.title("Add new Customer ")
+    for i in main_tb_val:
+      cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+      count_cus +=1
+    edit_customer.destroy()
+
+  edit_customer = Toplevel()  
+  edit_customer.title("Add new Customer ")
   p2 = PhotoImage(file = "images/fbicon.png")
-  add_customer.iconphoto(False, p2)
-  add_customer.geometry("775x580+300+100")
-  Labelframe1=LabelFrame(add_customer,text="Customer")
+  edit_customer.iconphoto(False, p2)
+  edit_customer.geometry("775x580+300+100")
+  Labelframe1=LabelFrame(edit_customer,text="Customer")
   Labelframe1.place(x=10,y=10,width=755,height=525)
   a1=Label(Labelframe1,text="Customer ID:",fg="Blue")
   a2=Label(Labelframe1,text="Category:")
@@ -956,7 +1031,8 @@ def cus_edit_customer():
   a3.place(x=620,y=7)
   cu_idr=IntVar() 
   b1=Entry(Labelframe1, textvariable = cu_idr)
-  b1.insert(0,cus_ins_val[0])
+  print(cus_ins_val[24])
+  b1.insert(0,cus_ins_val[24])
   cus_catg=StringVar() 
   b2=ttk.Combobox(Labelframe1,textvariable = cus_catg)    
   b2['values'] = ('Default')  
@@ -1066,6 +1142,7 @@ def cus_edit_customer():
   Labelframe6.place(x=10,y=317,width=340,height=80)
   cus_ds_chk = StringVar()
   cus_sp_tx=IntVar()
+  cus_sp_tx2=IntVar()
   cus_sp_disc=IntVar()
   chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = cus_ds_chk, onvalue = 1, offvalue = 0, font=("arial", 8))
   if cus_ins_val[17]==0:
@@ -1077,13 +1154,31 @@ def cus_edit_customer():
   a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
   a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
   cus_sp_disc = IntVar(Labelframe6, value='0')
-  b11=Entry(Labelframe6, textvariable=cus_sp_tx)
-  b11.insert(0,cus_ins_val[18])
-  b11.place(x=250,y=7,width=70)
+  
   b12=Entry(Labelframe6,textvariable=cus_sp_disc)
   b12.insert(0,cus_ins_val[19])
   b12.place(x=80,y=30,width=70)
 
+  swt='select taxtype from company'
+  fbcursor.execute(swt)
+  fdt=fbcursor.fetchone()
+  print(fdt[0])
+  if fdt[0]=='2':
+    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+    b11=Entry(Labelframe6, textvariable=cus_sp_tx)
+    b11.insert(0,cus_ins_val[18])
+    b11.place(x=250,y=7,width=70)
+    b14=Entry(Labelframe6,textvariable=cus_sp_tx2)
+    b14.place(x=250,y=30,width=70)
+    b14.insert(0,cus_ins_val[25])
+    a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
+  elif fdt[0]=='1':
+    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+    b11=Entry(Labelframe6, textvariable=cus_sp_tx)
+    b11.insert(0,cus_ins_val[18])
+    b11.place(x=250,y=7,width=70)
+  elif fdt[0]=='0':
+    pass
 
   Labelframe7=LabelFrame(Labelframe1,text="Customer type")
   Labelframe7.place(x=10,y=405,width=340,height=90)
@@ -1135,30 +1230,31 @@ def cus_edit_customer():
   scrollbar_cus_nt = Scrollbar(Labelframe9)
   scrollbar_cus_nt.place(x=295,y=10)
 
-  btn1=Button(add_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_edit_cst(),text="  OK").place(x=20, y=545)
-  btn2=Button(add_customer,width=80,compound = LEFT,image=cancel,text="  Cancel").place(x=665, y=545)
-  add_customer.mainloop()
+  btn1=Button(edit_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_edit_cst(),text="  OK").place(x=20, y=545)
+  btn2=Button(edit_customer,width=80,compound = LEFT,image=cancel,text="  Cancel", command=cancel_edt).place(x=665, y=545)
+  edit_customer.mainloop()
 #-----------------------------------------------------------------------------------Delete Customer
 def cus_delete_customer():
   cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
   print(cus_id)
   
   messagebox.askyesno("Delete Customers", "Are you sure want to delete 1 Customer(s) ?")
-  sql_qr="DELETE FROM customer WHERE customerid=%s"
+  sql_qr="DELETE FROM customer WHERE customerno=%s"
   sql_qr_val=(cus_id,)
   fbcursor.execute(sql_qr,sql_qr_val)
   fbilldb.commit()
+  
 
-  # for record in cus_main_tree.get_children():
-  #   cus_main_tree.delete(records)
-  # cus_main_table_sql="select * from customer"
-  # fbcursor.execute(cus_main_table_sql)
-  # main_tb_val=fbcursor.fetchall()
-  # count_cus=0
+  for record in cus_main_tree.get_children():
+    cus_main_tree.delete(record)
+  cus_main_table_sql="select * from customer"
+  fbcursor.execute(cus_main_table_sql)
+  main_tb_val=fbcursor.fetchall()
+  count_cus=0
 
-  # for i in main_tb_val:
-  #   cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[4],i[8],i[10],i[12],i[22]))
-  #   count_cus +=1
+  for i in main_tb_val:
+    cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+    count_cus +=1
 #-----------------------------------------------------------------------------------Preview Invoice Customer
 def cus_previewinvoice_customer():
   cus_in_preview = Toplevel()
@@ -1205,6 +1301,7 @@ def cus_previewinvoice_customer():
   fbcursor.execute(sqlrt)
   post_rp=fbcursor.fetchone()
   ps_cr=post_rp[0]
+  
   #-------------------------------------------------------------------------------------------------Heder data--------
   labelcmp=Label(cus_in_canvas,text=cus_company[1], bg="white",anchor="nw",font=("Helvetica", 12), width=40, height=2)
   window = cus_in_canvas.create_window(300,80, anchor="nw", window=labelcmp)
@@ -1268,7 +1365,7 @@ def cus_previewinvoice_customer():
   tre=fbcursor.fetchall() 
   for record in cus_prv_tree.get_children():
     cus_prv_tree.delete(record)
-             
+       
 
   count=0
   for i in tre:
@@ -1314,7 +1411,7 @@ def cus_printinvoice_customer():
       company= fbcursor.fetchone()
       
       pdf.setFont('Helvetica',12)
-      pdf.drawString(30,768, company[1])
+      pdf.drawString(27,768, company[1])
       text=company[2]
       wraped_text="\n".join(wrap(text,30))
       htg=wraped_text.split('\n')
@@ -1341,13 +1438,74 @@ def cus_printinvoice_customer():
               
       else:
               pass
-      pdf.drawString(30,700, "Sales tax reg No:"+company[4])
+      pdf.drawString(35,700, "Sales tax reg No:"+company[4])
       pdf.drawString(490,760, "Invoice Report")
 
-      pdf.drawString(460,720,"Customer ID:"+str(cus_ft[0]))
+      pdf.drawString(460,700,"Customer ID:"+str(cus_ft[0]))
       pdf.drawString(28,695,"__________________________________________________________________________________")
-      pdf.drawString(28,675,"__________________________________________________________________________________")
-      pdf.drawString(28,678,"Invoice No           Date        Due Date     Recurring      Status        Invoice Total    Total Paid   Balance      ")
+      pdf.drawString(31,680,"Bill To:")
+      pdf.drawString(31,668,cus_ft[4])
+      text=cus_ft[5]
+      wraped_text="\n".join(wrap(text,30))
+      htg=wraped_text.split('\n')
+          
+      vg=len(htg)
+      if vg>0:
+              pdf.drawString(30,654,htg[0])
+              print("1")
+              if vg>1:
+                pdf.drawString(30,640,htg[1])
+                print("2")
+                if vg>2:
+                    pdf.drawString(30,626,htg[2])
+                    print("3")
+                    if vg>3:
+                        pdf.drawString(30,612,htg[3])
+                        print("4")
+                    else:
+                        pass
+                else:
+                    pass
+              else:
+                  pass
+              
+      else:
+              pass
+
+      pdf.drawString(400,680,"Ship To:")
+      pdf.drawString(400,668,cus_ft[6])
+      text=cus_ft[7]
+      wraped_text="\n".join(wrap(text,30))
+      htg=wraped_text.split('\n')
+          
+      vg=len(htg)
+      if vg>0:
+              pdf.drawString(400,654,htg[0])
+              print("1")
+              if vg>1:
+                pdf.drawString(400,640,htg[1])
+                print("2")
+                if vg>2:
+                    pdf.drawString(400,626,htg[2])
+                    print("3")
+                    if vg>3:
+                        pdf.drawString(400,612,htg[3])
+                        print("4")
+                    else:
+                        pass
+                else:
+                    pass
+              else:
+                  pass
+              
+      else:
+              pass
+
+      pdf.drawString(28,606,"__________________________________________________________________________________")
+
+
+      pdf.drawString(28,591,"__________________________________________________________________________________")
+      pdf.drawString(28,591,"Invoice No           Date        Due Date     Recurring      Status        Invoice Total    Total Paid   Balance      ")
       
       
       sqlr= 'select currencysign from company'
@@ -1364,10 +1522,10 @@ def cus_printinvoice_customer():
       inv_valuz=(cus_id,)
       fbcursor.execute(sql_inv_dt,inv_valuz)
       tre=fbcursor.fetchall()
-      x=660
+      x=571
 
       for i in tre:
-                    if x==44 or x==50:
+                    if x==38 or x==50:
                         pdf.showPage()
                         x=750
                     else:
@@ -1701,7 +1859,7 @@ def cus_export_customer():
     lst = []
     with open(path, "w", newline='') as myfile:
       csvwriter = csv.writer(myfile, delimiter=',')
-      sql = 'select 	customerid ,category,businessname,businessaddress,cptelno,cpfax,cpemail,	contactperson,shipname,shipaddress,shipcptelno,shipcpfax,shipcontactperson,specifictax1,specifictax1,discount,shipcpemail,country,country,city, taxexempt,status from customer'
+      sql = 'select 	customerid ,category,businessname,businessaddress,cptelno,cpfax,cpemail,	contactperson,shipname,shipaddress,shipcptelno,shipcpfax,shipcontactperson,specifictax1,specifictax2,discount,shipcpemail,country,country,city, taxexempt,status from customer'
          
       fbcursor.execute(sql)
       pandsdata = fbcursor.fetchall()
@@ -1775,9 +1933,18 @@ def cus_search_customers():
     Button5.place(x=270,y=120)
     top.mainloop()
 #-----------------------------------------------------------------------------------Refresh Customer
-def cus_refresh_customers(self):
-    self.destroy()
-    self.__init__()
+def cus_refresh_customers(): 
+      for record in cus_main_tree.get_children():
+        cus_main_tree.delete(record)
+      cus_main_table_sql="select * from customer"
+      fbcursor.execute(cus_main_table_sql)
+      main_tb_val=fbcursor.fetchall()
+      count_cus=0
+
+      for i in main_tb_val:
+        cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+        count_cus +=1
+    
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$(((End)))
 
 ################################################################################((function For Invoice bottom table))
@@ -1819,10 +1986,33 @@ def cus_inv_btm1():
     fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
     main_tb_val=fbcursor.fetchall()
     count_cus=0
+    
+    sqlr= 'select currencysign from company'
+    fbcursor.execute(sqlr)
+    crncy=fbcursor.fetchone()
+    crcy=crncy[0]
+    sqlrt= 'select currsignplace from company'
+    fbcursor.execute(sqlrt)
+    post_rp=fbcursor.fetchone()
+    cency_pos=post_rp[0]
+  
     for i in main_tb_val:
-      cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3]," ",i[4],i[8],i[9],i[10]))
-      count_cus +=1
-def cus_inv_btm(event):
+      if cency_pos=="before amount":   
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
+        count_cus +=1
+      elif cency_pos=="after amount": 
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
+        count_cus +=1
+      elif cency_pos=="before amount with space": 
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
+        count_cus +=1 
+      elif cency_pos=="after amount with space":
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
+        count_cus +=1
+      else:
+        pass
+      
+def cus_inv_btm(event): 
     cus_inv2_s=ttk.Style()
     cus_inv2_s.configure('Treeview.Heading',background='white')
     cus_inv2_tree=ttk.Treeview(tab7,selectmode='browse')
@@ -1859,9 +2049,32 @@ def cus_inv_btm(event):
     fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
     main_tb_val=fbcursor.fetchall()
     count_cus=0
+    sqlr= 'select currencysign from company'
+    fbcursor.execute(sqlr)
+    crncy=fbcursor.fetchone()
+    crcy=crncy[0]
+    sqlrt= 'select currsignplace from company'
+    fbcursor.execute(sqlrt)
+    post_rp=fbcursor.fetchone()
+    cency_pos=post_rp[0]
+    
+
     for i in main_tb_val:
-      cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3]," ",i[4],i[8],i[9],i[10]))
-      count_cus +=1
+      
+      if cency_pos=="before amount":   
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
+        count_cus +=1
+      elif cency_pos=="after amount": 
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
+        count_cus +=1
+      elif cency_pos=="before amount with space": 
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
+        count_cus +=1 
+      elif cency_pos=="after amount with space":
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
+        count_cus +=1
+      else:
+        pass
   # #-------------------------------------------------------------------------------bottom tree order
 def cus_ord_btm():
     cus_ord_s=ttk.Style()
@@ -1899,9 +2112,30 @@ def cus_ord_btm():
     fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
     main_tb_val=fbcursor.fetchall()
     count_cus=0
+    sqlr= 'select currencysign from company'
+    fbcursor.execute(sqlr)
+    crncy=fbcursor.fetchone()
+    crcy=crncy[0]
+    sqlrt= 'select currsignplace from company'
+    fbcursor.execute(sqlrt)
+    post_rp=fbcursor.fetchone()
+    cency_pos=post_rp[0]
     for i in main_tb_val:
-      cus_ord_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[1],i[2],i[5],i[6],i[26],i[10],i[8]))
-      count_cus +=1
+      if cency_pos=="before amount": 
+        cus_ord_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[1],i[2],i[5],i[6],crcy+str(i[26]),crcy+str(i[10]),crcy+str(i[8])))
+        count_cus +=1 
+      elif cency_pos=="after amount":
+        cus_ord_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[1],i[2],i[5],i[6],str(i[26])+crcy,str(i[10])+crcy,str(i[8])+crcy))
+        count_cus +=1
+      elif cency_pos=="before amount with space":
+        cus_ord_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[1],i[2],i[5],i[6],crcy+" "+str(i[26]),crcy+" "+str(i[10]),crcy+" "+str(i[8])))
+        count_cus +=1
+      elif cency_pos=="after amount with space":
+        cus_ord_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[1],i[2],i[5],i[6],str(i[26])+" "+crcy,str(i[10])+" "+crcy,str(i[8])+" "+crcy))
+        count_cus +=1
+      else:
+        pass
+      
   # #-------------------------------------------------------------------------------bottom tree Estimates
 def cus_est_btm():
     cus_est_s=ttk.Style()
@@ -1939,9 +2173,31 @@ def cus_est_btm():
     fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
     main_tb_val=fbcursor.fetchall()
     count_cus=0
+    sqlr= 'select currencysign from company'
+    fbcursor.execute(sqlr)
+    crncy=fbcursor.fetchone()
+    crcy=crncy[0]
+    sqlrt= 'select currsignplace from company'
+    fbcursor.execute(sqlrt)
+    post_rp=fbcursor.fetchone()
+    cency_pos=post_rp[0]
     for i in main_tb_val:
-      cus_est_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3],i[5],i[6],i[8],i[12],i[8]))
-      count_cus +=1
+      if cency_pos=="before amount": 
+        cus_est_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],i[5],i[6],crcy+str(i[36]),crcy+str(i[12]),crcy+str(i[8])))
+        count_cus +=1 
+      elif cency_pos=="after amount":
+        cus_est_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],i[5],i[6],str(i[36])+crcy,str(i[12])+crcy,str(i[8])+crcy))
+        count_cus +=1
+      elif cency_pos=="before amount with space":
+        cus_est_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],i[5],i[6],crcy+" "+str(i[36]),crcy+" "+str(i[12]),crcy+" "+str(i[8])))
+        count_cus +=1
+      elif cency_pos=="after amount with space":
+        cus_est_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],i[5],i[6],str(i[36])+" "+crcy,str(i[12])+" "+crcy,str(i[8])+" "+crcy))
+        count_cus +=1
+      else:
+        pass
+      
+      
   # #-------------------------------------------------------------------------------bottom tree statement
 def cus_stm_btm():
     cus_stm_s=ttk.Style()
@@ -1979,9 +2235,31 @@ def cus_stm_btm():
     fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
     main_tb_val=fbcursor.fetchall()
     count_cus=0
+    sqlr= 'select currencysign from company'
+    fbcursor.execute(sqlr)
+    crncy=fbcursor.fetchone()
+    crcy=crncy[0]
+    sqlrt= 'select currsignplace from company'
+    fbcursor.execute(sqlrt)
+    post_rp=fbcursor.fetchone()
+    cency_pos=post_rp[0]
     for i in main_tb_val:
-      cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3]," ",i[4],i[8],i[9],i[10]))
-      count_cus +=1
+      if cency_pos=="before amount": 
+        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
+        count_cus +=1 
+      elif cency_pos=="after amount":
+        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
+        count_cus +=1
+      elif cency_pos=="before amount with space":
+        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
+        count_cus +=1
+      elif cency_pos=="after amount with space":
+        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
+        count_cus +=1
+      else:
+        pass
+      
+     
   # #-------------------------------------------------------------------------------bottom tree payment
 def cus_pym_btm():
     cus_pym_s=ttk.Style()
@@ -2016,14 +2294,36 @@ def cus_pym_btm():
     main_tb_val=fbcursor.fetchall()
     
     count_cus=0
+    sqlr= 'select currencysign from company'
+    fbcursor.execute(sqlr)
+    crncy=fbcursor.fetchone()
+    crcy=crncy[0]
+    sqlrt= 'select currsignplace from company'
+    fbcursor.execute(sqlrt)
+    post_rp=fbcursor.fetchone()
+    cency_pos=post_rp[0]
     for j in main_tb_val:
         cus_sql="select * from payments where invoiceid =%s"
         cus_sql_val=(j[0],)
         fbcursor.execute(cus_sql,cus_sql_val)
         pym_tb=fbcursor.fetchall()
         for i in pym_tb:
-          cus_pym_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],j[34],i[12],j[18],i[9],i[14]))
-          count_cus += 1
+          if cency_pos=="before amount": 
+            cus_pym_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],j[34],i[12],j[18],i[9],crcy+str(i[14])))
+            count_cus +=1 
+          elif cency_pos=="after amount":
+            cus_pym_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],j[34],i[12],j[18],i[9],str(i[14])+crcy))
+            count_cus +=1
+          elif cency_pos=="before amount with space":
+            cus_pym_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],j[34],i[12],j[18],i[9],crcy+" "+str(i[14])))
+            count_cus +=1
+          elif cency_pos=="after amount with space":
+            cus_pym_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],j[34],i[12],j[18],i[9],str(i[14])+" "+crcy))
+            count_cus +=1
+          else:
+            pass
+              
+              
         
         
     
@@ -2061,15 +2361,88 @@ def cus_pod_btm():
     fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
     main_tb_val=fbcursor.fetchall()
     count_cus=0
+    sqlr= 'select currencysign from company'
+    fbcursor.execute(sqlr)
+    crncy=fbcursor.fetchone()
+    crcy=crncy[0]
+    sqlrt= 'select currsignplace from company'
+    fbcursor.execute(sqlrt)
+    post_rp=fbcursor.fetchone()
+    cency_pos=post_rp[0]
     for i in main_tb_val:
-      cus_por_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3],i[4],i[5],i[9]))
-      count_cus +=1
+      if cency_pos=="before amount": 
+        cus_por_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3],i[4],i[5],crcy+str(i[9])))
+        count_cus +=1 
+      elif cency_pos=="after amount":
+        cus_por_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3],i[4],i[5],str(i[9])+crcy))
+        count_cus +=1
+      elif cency_pos=="before amount with space":
+        cus_por_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3],i[4],i[5],crcy+" "+str(i[9])))
+        count_cus +=1
+      elif cency_pos=="after amount with space":
+        cus_por_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[3],i[4],i[5],str(i[9])+" "+crcy))
+        count_cus +=1
+      else:
+        pass
+      
+      
   #----------------------------------------------------------------------------------Filter Section
-def ct_filter():
-  pass
+def ct_filter(event):
+  selected_indices = cus_listbox.curselection()
+  if str(selected_indices)=="(0,)":
+    for record in cus_main_tree.get_children():
+      cus_main_tree.delete(record)
+    cus_main_table_sql="select * from customer"
+    fbcursor.execute(cus_main_table_sql)
+    main_tb_val=fbcursor.fetchall()
+    
+    count_cus=0
 
+    for i in main_tb_val:
+      cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+      
+      count_cus +=1
+  elif str(selected_indices)=="(1,)":
+    for record in cus_main_tree.get_children():
+      cus_main_tree.delete(record)
+    cus_main_table_sql="select * from customer where customertype='Both(Client/Vender)'"
+    fbcursor.execute(cus_main_table_sql)
+    main_tb_val=fbcursor.fetchall()
+    
+    count_cus=0
 
+    for i in main_tb_val:
+      cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+      
+      count_cus +=1
+  elif str(selected_indices)=="(2,)":
+    for record in cus_main_tree.get_children():
+      cus_main_tree.delete(record)
+    cus_main_table_sql="select * from customer where customertype='Client'"
+    fbcursor.execute(cus_main_table_sql)
+    main_tb_val=fbcursor.fetchall()
+    
+    count_cus=0
 
+    for i in main_tb_val:
+      cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+      
+      count_cus +=1
+  elif str(selected_indices)=="(3,)":
+    for record in cus_main_tree.get_children():
+      cus_main_tree.delete(record)
+    cus_main_table_sql="select * from customer where customertype='Vender'"
+    fbcursor.execute(cus_main_table_sql)
+    main_tb_val=fbcursor.fetchall()
+    
+    count_cus=0
+
+    for i in main_tb_val:
+      cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+      
+      count_cus +=1
+  else:
+    pass
 
 ####################################################################################################################
 
@@ -2105,9 +2478,10 @@ main_tb_val=fbcursor.fetchall()
 count_cus=0
 
 for i in main_tb_val:
-    cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[0],i[2],i[4],i[8],i[10],i[12],i[22]))
+    cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
     count_cus +=1
 cus_main_tree.bind('<<TreeviewSelect>>',cus_inv_btm)
+# cus_main_tree.selection_set(9)
 
 
 #----------------------------------------------------------------------------Button bottam table-----
@@ -2205,7 +2579,7 @@ cus_listbox.insert(2, "  View only Client Type")
 cus_listbox.insert(3, "  View only Vendor Type")
 
 cus_listbox.place(x=1099,y=120,height=545,width=254)
-# cus_listbox.bind('<<ListboxSelect>>', ct_filter)
+cus_listbox.bind('<<ListboxSelect>>', ct_filter)
 
 #@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 
