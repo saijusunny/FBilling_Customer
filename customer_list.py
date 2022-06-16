@@ -10,7 +10,7 @@ from sqlite3 import Cursor
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
-
+from tkinter.scrolledtext import ScrolledText
 from turtle import clear, color, width
 from unittest.util import _count_diff_all_purpose
 from PIL import ImageTk, Image
@@ -67,7 +67,7 @@ from PIL import ImageGrab
 from PIL import ImageTk, Image, ImageFile
 import PIL.Image
 from textwrap import wrap
-
+import re
 
 
 # ##########################################################################################################
@@ -748,59 +748,67 @@ def cus_addemail_order():
 def cus_add_customer():
   #-------------------------------------------------------------------------------Add to database
   def cancel_add():
+    print(scll.get("1.0", END))
     add_customer.destroy()
   def cus_add_cst():
     cst_id=cu_idr.get()#id
-    cus_bs_nm=bnm_cus.get()#bs name
-    # cmp_id=
-    cus_bs_ad_cus=bs_adr_cus.get()#bs ad name
-    cus_bs_cnt=bs_cnt.get()#Contact person
-    cus_bs_em=bs_em.get()#email bs
-    cus_bs_tel=bs_tel.get()#bs tel
-    cus_bs_fax=bs_fax.get()#bs fax
-    cus_bs_mob=bs_mobi.get()#bs mob
-    cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
-    cus_bs_spc_tax=cus_sp_tx.get()# specific tax
-    cus_bs_spc_tax2=cus_sp_tx2.get()# specific tax
-    cus_bs_dis=cus_sp_disc.get()# discount
-    cus_bs_ctr=bs_cus_ct.get()# customer category
-
-    # ship 
-    cus_shp_cat=cus_catg.get()# category
-    cus_shp_st=cus_st.get()# status Checkbox
-    cus_shp_cnt_pr=cus_sh_nam.get()#contact person
-    cus_shp_adr=cus_sh_adr.get()#contact address
-    cus_shp_cnt=bs_sh_cnt.get()#Contact person
-    cus_shp_em=bs_sh_em.get()#email bs
-    cus_shp_tel=bs_sh_tel.get()#bs tel
-    cus_shp_fax=bs_sh_fax.get()#bs fax
-    cus_shp_cntry=cus_sh_coun.get()#contry
-    cus_shp_city=cus_sh_cty.get()#city
-    cus_shp_nte=cus_nt.get()
-    cus_ed_tbles="select * from customer where customerno=%s"
-    cus_ed_tbles_valuz=(cst_id,)
-    fbcursor.execute(cus_ed_tbles,cus_ed_tbles_valuz)
-    cus_ins_val=fbcursor.fetchone()
-
-    if cus_ins_val is None:
-      cus_tbl_add="INSERT INTO customer(customerno,category,status,businessname,businessaddress,shipname,shipaddress,contactperson,cpemail,cptelno,cpfax,cpmobileforsms,shipcontactperson,shipcpemail,shipcptelno,shipcpfax,taxexempt,specifictax1,discount,country,city,customertype,notes,specifictax2)VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)" #adding values into db
-      cus_tbl_add_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte,cus_bs_spc_tax2)
-      fbcursor.execute(cus_tbl_add,cus_tbl_add_val)
-      fbilldb.commit()
-      for record in cus_main_tree.get_children():
-        cus_main_tree.delete(record)
-      cus_main_table_sql="select * from customer"
-      fbcursor.execute(cus_main_table_sql)
-      main_tb_val=fbcursor.fetchall()
-      count_cus=0
-
-      for i in main_tb_val:
-        cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
-        count_cus +=1
-      add_customer.destroy()
+    if cst_id==0 or None:
+          
+          pass
     else:
-        messagebox.askyesno("Already Exists", "Customer ID value already exists. Duplicate value not allowed")
-        cus_add_customer()
+      
+      cus_bs_nm=bnm_cus.get()#bs name
+      # cmp_id=
+      cus_bs_ad_cus=bs_adr_cus.get()#bs ad name
+      cus_bs_cnt=bs_cnt.get()#Contact person
+      cus_bs_em=bs_em.get()#email bs
+      cus_bs_tel=bs_tel.get()#bs tel
+      cus_bs_fax=bs_fax.get()#bs fax
+      cus_bs_mob=bs_mobi.get()#bs mob
+      cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
+      cus_bs_spc_tax=cus_sp_tx.get()# specific tax
+      cus_bs_spc_tax2=cus_sp_tx2.get()# specific tax
+      cus_bs_dis=cus_sp_disc.get()# discount
+      cus_bs_ctr=bs_cus_ct.get()# customer category
+
+      # ship 
+      cus_shp_cat=cus_catg.get()# category
+      cus_shp_st=cus_st.get()# status Checkbox
+      cus_shp_cnt_pr=cus_sh_nam.get()#contact person
+      cus_shp_adr=cus_sh_adr.get()#contact address
+      cus_shp_cnt=bs_sh_cnt.get()#Contact person
+      cus_shp_em=bs_sh_em.get()#email bs
+      cus_shp_tel=bs_sh_tel.get()#bs tel
+      cus_shp_fax=bs_sh_fax.get()#bs fax
+      cus_shp_cntry=cus_sh_coun.get()#contry
+      cus_shp_city=cus_sh_cty.get()#city
+      cus_shp_nte=scll.get("1.0", END)
+      print(cus_shp_nte)
+      cus_ed_tbles="select * from customer where customerno=%s"
+      cus_ed_tbles_valuz=(cst_id,)
+      fbcursor.execute(cus_ed_tbles,cus_ed_tbles_valuz)
+      cus_ins_val=fbcursor.fetchone()
+
+      if cus_ins_val is None:
+        cus_tbl_add="INSERT INTO customer(customerno,category,status,businessname,businessaddress,shipname,shipaddress,contactperson,cpemail,cptelno,cpfax,cpmobileforsms,shipcontactperson,shipcpemail,shipcptelno,shipcpfax,taxexempt,specifictax1,discount,country,city,customertype,notes,specifictax2)VALUES(%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)" #adding values into db
+        cus_tbl_add_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte,cus_bs_spc_tax2)
+        fbcursor.execute(cus_tbl_add,cus_tbl_add_val)
+        fbilldb.commit()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        cus_main_table_sql="select * from customer"
+        fbcursor.execute(cus_main_table_sql)
+        main_tb_val=fbcursor.fetchall()
+        count_cus=0
+
+        for i in main_tb_val:
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        
+        add_customer.destroy()
+      else:
+          messagebox.askyesno("Already Exists", "Customer ID value already exists. Duplicate value not allowed")
+        
 
   add_customer = Toplevel()  
   add_customer.title("Add new Customer ")
@@ -836,7 +844,13 @@ def cus_add_customer():
   a2=Label(Labelframe2,text="Address:",fg="Blue").place(x=10,y=35)
   bnm_cus=StringVar()
   bs_adr_cus=StringVar()
-  b1=Entry(Labelframe2, textvariable=bnm_cus).place(x=110,y=10,width=210)
+  
+  
+
+  b1=Entry(Labelframe2, textvariable=bnm_cus)
+  # b1.config(validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
+  b1.place(x=110,y=10,width=210)
+
   b2=Entry(Labelframe2, textvariable=bs_adr_cus).place(x=110,y=35,width=210,height=63)  
   btn110=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=85,height=20)
 
@@ -864,10 +878,106 @@ def cus_add_customer():
   bs_fax=StringVar()
   bs_mobi=StringVar()
   b11=Entry(Labelframe4, textvariable=bs_cnt).place(x=110,y=10,width=210)
-  b21=Entry(Labelframe4,textvariable=bs_em).place(x=110,y=35,width=210)
-  b31=Entry(Labelframe4,textvariable=bs_tel).place(x=110,y=60,width=90)
-  b41=Entry(Labelframe4,textvariable=bs_fax).place(x=230,y=60,width=90)
-  b51=Entry(Labelframe4,textvariable=bs_mobi).place(x=215,y=85,width=105)
+
+  #-------------------------------------------------------------------------------------------Email Validation
+  b21=Entry(Labelframe4,textvariable=bs_em)
+  
+
+  def validate(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+
+        b21.config(fg="black")
+        return True
+
+  def on_invalid():
+        b21.config(fg="red")
+        
+  vcmd = (Labelframe2.register(validate), '%P')
+  ivcmd = (Labelframe2.register(on_invalid),)
+
+  b21.config(validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
+  
+  b21.place(x=110,y=35,width=210)
+
+  b311=Entry(Labelframe4,textvariable=bs_tel)
+  def validate_tel(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^[0-9]\d{9}$'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+        b311.config(fg="black")
+        return True
+
+  def on_invalid_tel():
+        b311.config(fg="red")
+        
+  v_tel_cmd = (Labelframe2.register(validate_tel), '%P')
+  iv_tel_cmd = (Labelframe2.register(on_invalid_tel),)
+  
+  
+  b311.config(validate='focusout', validatecommand=v_tel_cmd, invalidcommand=iv_tel_cmd)
+  b311.place(x=110,y=60,width=90)
+
+  b4126=Entry(Labelframe4,textvariable=bs_fax)
+  def validate_telb4126(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+        b4126.config(fg="black")
+        return True
+
+  def on_invalid_telb4126():
+        b4126.config(fg="red")
+        
+  v_tel_cmdb4126 = (Labelframe2.register(validate_telb4126), '%P')
+  iv_tel_cmdb4126 = (Labelframe2.register(on_invalid_telb4126),)
+  b4126.config(validate='focusout', validatecommand=v_tel_cmdb4126, invalidcommand=iv_tel_cmdb4126)
+  b4126.place(x=230,y=60,width=90)
+  
+  b51=Entry(Labelframe4,textvariable=bs_mobi)
+  def validate_telb51(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^[0-9]\d{9}$'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+        b51.config(fg="black")
+        return True
+
+  def on_invalid_telb51():
+        b51.config(fg="red")
+        
+  v_tel_cmdb51 = (Labelframe2.register(validate_telb51), '%P')
+  iv_tel_cmdb51 = (Labelframe2.register(on_invalid_telb51),)
+  b51.config(validate='focusout', validatecommand=v_tel_cmdb51, invalidcommand=iv_tel_cmdb51)
+  b51.place(x=215,y=85,width=105)
   btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
 
   bs_sh_cnt=StringVar()
@@ -883,9 +993,77 @@ def cus_add_customer():
   a41=Label(Labelframe5,text="Fax:").place(x=200,y=60)
 
   b11=Entry(Labelframe5, textvariable=bs_sh_cnt).place(x=110,y=10,width=210)
-  b21=Entry(Labelframe5,textvariable=bs_sh_em).place(x=110,y=35,width=210)
-  b31=Entry(Labelframe5,textvariable=bs_sh_tel).place(x=110,y=60,width=90)
-  b41=Entry(Labelframe5,textvariable=bs_sh_fax).place(x=230,y=60,width=90)
+  
+  b211=Entry(Labelframe5,textvariable=bs_sh_em)
+  def validateb211(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+
+        b211.config(fg="black")
+        return True
+
+  def on_invalidb211():
+        b211.config(fg="red")
+        
+  vcmdb211 = (Labelframe2.register(validateb211), '%P')
+  ivcmdb211 = (Labelframe2.register(on_invalidb211),)
+
+  b211.config(validate='focusout', validatecommand=vcmdb211, invalidcommand=ivcmdb211)
+  b211.place(x=110,y=35,width=210)
+  
+  b31=Entry(Labelframe5,textvariable=bs_sh_tel)
+  def validate_telb31(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^[0-9]\d{9}$'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+        b31.config(fg="black")
+        return True
+
+  def on_invalid_telb31():
+        b31.config(fg="red")
+        
+  v_tel_cmdb31 = (Labelframe2.register(validate_telb31), '%P')
+  iv_tel_cmdb31 = (Labelframe2.register(on_invalid_telb31),)
+  b31.config(validate='focusout', validatecommand=v_tel_cmdb31, invalidcommand=iv_tel_cmdb31)
+  b31.place(x=110,y=60,width=90)
+
+  b4141=Entry(Labelframe5,textvariable=bs_sh_fax)
+  def validate_telb4141(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+        b4141.config(fg="black")
+        return True
+
+  def on_invalid_telb4141():
+        b4141.config(fg="red")
+        
+  v_tel_cmdb4141 = (Labelframe2.register(validate_telb4141), '%P')
+  iv_tel_cmdb4141 = (Labelframe2.register(on_invalid_telb4141),)
+  b4141.config(validate='focusout', validatecommand=v_tel_cmdb4141, invalidcommand=iv_tel_cmdb4141)
+  b4141.place(x=230,y=60,width=90)
 
 
   Labelframe6=LabelFrame(Labelframe1,text="Payment Option")
@@ -954,9 +1132,11 @@ def cus_add_customer():
         b12=Entry(Labelframe9,yscrollcommand=scrollbar.set).place(x=10,y=10,width=290,height=70)
         yscrollcommand.config(command=b12.yview)'''
   cus_nt=StringVar()
-  b12=Entry(Labelframe9, textvariable=cus_nt).place(x=20,y=10,width=295,height=70)
-  scrollbar_cus_nt = Scrollbar(Labelframe9)
-  scrollbar_cus_nt.place(x=295,y=10)
+  global scll
+  scll=scrolledtext.ScrolledText(Labelframe9)
+  scll.place(x=20,y=10,width=295,height=70)
+  # scrollbar_cus_nt = Scrollbar(Labelframe9)
+  # scrollbar_cus_nt.place(x=295,y=10)
 
   btn1=Button(add_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_add_cst(),text="  OK").place(x=20, y=545)
   btn2=Button(add_customer,width=80,compound = LEFT,image=cancel,text="  Cancel",command=cancel_add).place(x=665, y=545)
@@ -974,7 +1154,10 @@ def cus_edit_customer():
     edit_customer.destroy()
 
   def cus_edit_cst():
-    cst_id=cu_idr.get()#id
+    print("dshfgjshgfjsdhgfdj")
+    print(b1s.get())
+    print("dshfgjshgfjsdhgfdj")
+    cst_id=b1s.get()#id
     cus_bs_nm=bnm_cus.get()#bs name
     # cmp_id=
     cus_bs_ad_cus=bs_adr_cus.get()#bs ad name
@@ -985,6 +1168,7 @@ def cus_edit_customer():
     cus_bs_mob=bs_mobi.get()#bs mob
     cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
     cus_bs_spc_tax=cus_sp_tx.get()# specific tax
+    cus_bs_spc_tax2=cus_sp_tx2.get()
     cus_bs_dis=cus_sp_disc.get()# discount
     cus_bs_ctr=bs_cus_ct.get()# customer category
 
@@ -999,11 +1183,12 @@ def cus_edit_customer():
     cus_shp_fax=bs_sh_fax.get()#bs fax
     cus_shp_cntry=cus_sh_coun.get()#contry
     cus_shp_city=cus_sh_cty.get()#city
-    cus_shp_nte=cus_nt.get()
+    cus_shp_ntre=cfgd.get("1.0", END)
+    print(cus_shp_ntre)
 
     cus_tbl_edit="update customer set customerno=%s,category=%s,status=%s,businessname=%s,businessaddress=%s,shipname=%s,shipaddress=%s,contactperson=%s,cpemail=%s,cptelno=%s,cpfax=%s,cpmobileforsms=%s,shipcontactperson=%s,shipcpemail=%s,shipcptelno=%s,shipcpfax=%s,taxexempt=%s,specifictax1=%s,discount=%s,country=%s,city=%s,customertype=%s,notes=%s, specifictax2=%s where customerno = %s" #adding values into db
-    cus_tbl_edit_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_nte,cus_id)
-    fbcursor.execute(cus_tbl_edit,cus_sp_tx2,cus_tbl_edit_val)
+    cus_tbl_edit_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_ntre,cus_bs_spc_tax2,cus_id,)
+    fbcursor.execute(cus_tbl_edit,cus_tbl_edit_val)
     fbilldb.commit()
     cus_main_s=ttk.Style()
     for record in cus_main_tree.get_children():
@@ -1029,10 +1214,10 @@ def cus_edit_customer():
   a2=Label(Labelframe1,text="Category:")
   a3=Label(Labelframe1,text="Status :")
   a3.place(x=620,y=7)
-  cu_idr=IntVar() 
-  b1=Entry(Labelframe1, textvariable = cu_idr)
+ 
+  b1s=Entry(Labelframe1)
   print(cus_ins_val[24])
-  b1.insert(0,cus_ins_val[24])
+  b1s.insert(0,cus_ins_val[24])
   cus_catg=StringVar() 
   b2=ttk.Combobox(Labelframe1,textvariable = cus_catg)    
   b2['values'] = ('Default')  
@@ -1041,7 +1226,7 @@ def cus_edit_customer():
   b2.current(0)
   a1.place(x=10,y=7)
   a2.place(x=330,y=7)   
-  b1.place(x=120,y=7,width=200)
+  b1s.place(x=120,y=7,width=200)
   b2.place(x=390,y=7,width=220)
   cus_st = IntVar()
   chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = cus_st, onvalue = 1, offvalue = 0)
@@ -1086,6 +1271,7 @@ def cus_edit_customer():
   Labelframe4=LabelFrame(Labelframe1,text="Contact")
   Labelframe4.place(x=10,y=170,width=340,height=137)
   a11=Label(Labelframe4,text="Contact Person:").place(x=10,y=10)
+  
   a21=Label(Labelframe4,text="Email Address:",fg="Blue").place(x=10,y=35)
   a31=Label(Labelframe4,text="Tel. No:").place(x=10,y=60)
   a41=Label(Labelframe4,text="Fax:").place(x=200,y=60)
@@ -1098,16 +1284,106 @@ def cus_edit_customer():
   b11=Entry(Labelframe4, textvariable=bs_cnt)
   b11.insert(0,cus_ins_val[8])
   b11.place(x=110,y=10,width=210)
+  
   b21=Entry(Labelframe4,textvariable=bs_em)
+  def validate(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+        b21.config(fg="black")
+        return True
+
+  def on_invalid():
+        b21.config(fg="red")
+        
+  vcmd = (Labelframe2.register(validate), '%P')
+  ivcmd = (Labelframe2.register(on_invalid),)
+
+  
+  
   b21.insert(0,cus_ins_val[9])
+  b21.config(validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
   b21.place(x=110,y=35,width=210)
+  def validate_tel(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^[0-9]\d{9}$'
+        if re.fullmatch(pattern, value) is None:
+            return False
+            
+        b31.config(fg="black")
+        return True
+
+  def on_invalid_tel():
+      b31.config(fg="red")
+  
+       
+  v_tel_cmd = (Labelframe2.register(validate_tel), '%P')
+  iv_tel_cmd = (Labelframe2.register(on_invalid_tel),)
+
   b31=Entry(Labelframe4,textvariable=bs_tel)
+  b31.config(validate='focusout', validatecommand=v_tel_cmd, invalidcommand=iv_tel_cmd)
   b31.insert(0,cus_ins_val[10])
+
   b31.place(x=110,y=60,width=90)
-  b41=Entry(Labelframe4,textvariable=bs_fax)
-  b41.insert(0,cus_ins_val[11])
-  b41.place(x=230,y=60,width=90)
+  b4126=Entry(Labelframe4,textvariable=bs_fax)
+  def validate_telb4126(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+        b4126.config(fg="black")
+        return True
+
+  def on_invalid_telb4126():
+        b4126.config(fg="red")
+        
+  v_tel_cmdb4126 = (Labelframe2.register(validate_telb4126), '%P')
+  iv_tel_cmdb4126 = (Labelframe2.register(on_invalid_telb4126),)
+  b4126.config(validate='focusout', validatecommand=v_tel_cmdb4126, invalidcommand=iv_tel_cmdb4126)
+  b4126.insert(0,cus_ins_val[11])
+  b4126.place(x=230,y=60,width=90)
+
   b51=Entry(Labelframe4,textvariable=bs_mobi)
+  def validate_tel3(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^[0-9]\d{9}$'
+        if re.fullmatch(pattern, value) is None:
+            return False
+            
+        b51.config(fg="black")
+        return True
+
+  def on_invalid_tel3():
+      b51.config(fg="red")
+  
+       
+  v_tel_cmd3 = (Labelframe2.register(validate_tel3), '%P')
+  iv_tel_cmd3 = (Labelframe2.register(on_invalid_tel3),)
+
+  b51.config(validate='focusout', validatecommand=v_tel_cmd3, invalidcommand=iv_tel_cmd3)
   b51.insert(0,cus_ins_val[12])
   b51.place(x=215,y=85,width=105)
   btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
@@ -1127,15 +1403,82 @@ def cus_edit_customer():
   b11=Entry(Labelframe5, textvariable=bs_sh_cnt)
   b11.insert(0,cus_ins_val[13])
   b11.place(x=110,y=10,width=210)
-  b21=Entry(Labelframe5,textvariable=bs_sh_em)
-  b21.insert(0,cus_ins_val[14])
-  b21.place(x=110,y=35,width=210)
-  b31=Entry(Labelframe5,textvariable=bs_sh_tel)
-  b31.insert(0,cus_ins_val[15])
-  b31.place(x=110,y=60,width=90)
-  b41=Entry(Labelframe5,textvariable=bs_sh_fax)
-  b41.insert(0,cus_ins_val[16])
-  b41.place(x=230,y=60,width=90)
+  b211=Entry(Labelframe5,textvariable=bs_sh_em)
+  
+
+  def validateb21(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+
+       
+        b211.config(fg="black")
+        return True
+
+  def on_invalidb21():
+        b211.config(fg="red")
+        
+  vcmdb21 = (Labelframe2.register(validateb21), '%P')
+  ivcmdb21 = (Labelframe2.register(on_invalidb21),)
+  
+  b211.config(validate='focusout', validatecommand=vcmdb21, invalidcommand=ivcmdb21)
+  b211.insert(0,cus_ins_val[14])
+  b211.place(x=110,y=35,width=210)
+  b311=Entry(Labelframe5,textvariable=bs_sh_tel)
+  def validate_telb311(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^[0-9]\d{9}$'
+        if re.fullmatch(pattern, value) is None:
+            return False
+            
+        b311.config(fg="black")
+        return True
+
+  def on_invalid_telb311():
+      b311.config(fg="red")
+  v_tel_cmdb311 = (Labelframe2.register(validate_telb311), '%P')
+  iv_tel_cmdb311 = (Labelframe2.register(on_invalid_telb311),)
+
+  b311.insert(0,cus_ins_val[15])
+  b311.config(validate='focusout', validatecommand=v_tel_cmdb311, invalidcommand=iv_tel_cmdb311)
+  b311.place(x=110,y=60,width=90)
+
+  b414=Entry(Labelframe5,textvariable=bs_sh_fax)
+  def validate_telb414(value):
+        
+        """
+        Validat the email entry
+        :param value:
+        :return:
+        """
+        pattern = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
+        if re.fullmatch(pattern, value) is None:
+            
+            return False
+        b414.config(fg="black")
+        return True
+
+  def on_invalid_telb414():
+        b414.config(fg="red")
+        
+  v_tel_cmdb414 = (Labelframe2.register(validate_telb414), '%P')
+  iv_tel_cmdb414 = (Labelframe2.register(on_invalid_telb414),)
+  b414.config(validate='focusout', validatecommand=v_tel_cmdb414, invalidcommand=iv_tel_cmdb414)
+
+  b414.insert(0,cus_ins_val[16])
+  b414.place(x=230,y=60,width=90)
 
 
   Labelframe6=LabelFrame(Labelframe1,text="Payment Option")
@@ -1155,9 +1498,9 @@ def cus_edit_customer():
   a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
   cus_sp_disc = IntVar(Labelframe6, value='0')
   
-  b12=Entry(Labelframe6,textvariable=cus_sp_disc)
-  b12.insert(0,cus_ins_val[19])
-  b12.place(x=80,y=30,width=70)
+  cus_sp_disc=Entry(Labelframe6)
+  cus_sp_disc.insert(0,cus_ins_val[19])
+  cus_sp_disc.place(x=80,y=30,width=70)
 
   swt='select taxtype from company'
   fbcursor.execute(swt)
@@ -1165,18 +1508,19 @@ def cus_edit_customer():
   print(fdt[0])
   if fdt[0]=='2':
     a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-    b11=Entry(Labelframe6, textvariable=cus_sp_tx)
-    b11.insert(0,cus_ins_val[18])
-    b11.place(x=250,y=7,width=70)
-    b14=Entry(Labelframe6,textvariable=cus_sp_tx2)
-    b14.place(x=250,y=30,width=70)
-    b14.insert(0,cus_ins_val[25])
+    cus_sp_tx=Entry(Labelframe6)
+    cus_sp_tx.insert(0,cus_ins_val[18])
+    cus_sp_tx.place(x=250,y=7,width=70)
+    cus_sp_tx2=Entry(Labelframe6)
+    cus_sp_tx2.insert(0,cus_ins_val[25])
+    cus_sp_tx2.place(x=250,y=30,width=70)
+    
     a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
   elif fdt[0]=='1':
     a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-    b11=Entry(Labelframe6, textvariable=cus_sp_tx)
-    b11.insert(0,cus_ins_val[18])
-    b11.place(x=250,y=7,width=70)
+    cus_sp_tx=Entry(Labelframe6)
+    cus_sp_tx.insert(0,cus_ins_val[18])
+    cus_sp_tx.place(x=250,y=7,width=70)
   elif fdt[0]=='0':
     pass
 
@@ -1224,11 +1568,12 @@ def cus_edit_customer():
         b12=Entry(Labelframe9,yscrollcommand=scrollbar.set).place(x=10,y=10,width=290,height=70)
         yscrollcommand.config(command=b12.yview)'''
   cus_nt=StringVar()
-  b12=Entry(Labelframe9, textvariable=cus_nt)
-  b12.insert(0,cus_ins_val[23])  
-  b12.place(x=20,y=10,width=295,height=70)
-  scrollbar_cus_nt = Scrollbar(Labelframe9)
-  scrollbar_cus_nt.place(x=295,y=10)
+  global cfgd
+  cfgd=scrolledtext.ScrolledText(Labelframe9)
+  cfgd.insert(1.0,cus_ins_val[23])
+  cfgd.place(x=20,y=10,width=295,height=70)
+  # scrollbar_cus_nt = Scrollbar(Labelframe9)
+  # scrollbar_cus_nt.place(x=295,y=10)
 
   btn1=Button(edit_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_edit_cst(),text="  OK").place(x=20, y=545)
   btn2=Button(edit_customer,width=80,compound = LEFT,image=cancel,text="  Cancel", command=cancel_edt).place(x=665, y=545)
