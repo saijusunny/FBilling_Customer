@@ -231,7 +231,7 @@ cus_pn.pack(side="left", padx=5)
 
 usr_imp = PIL.Image.open("images/import.png")
 cus_importcustomerIcon=ImageTk.PhotoImage(usr_imp)
-cus_importcustomerLabel = Button(CusmidFrame,compound="top", text="Import\nCustomers",command=lambda:cus_import_customer(),relief=RAISED, image=cus_importcustomerIcon, font=("arial", 8),bg="#f8f8f2", fg="black", height=55, bd=1, width=55)
+cus_importcustomerLabel = Button(CusmidFrame,compound="top", text="Import\nCustomers",command=lambda:import_customer_check(),relief=RAISED, image=cus_importcustomerIcon, font=("arial", 8),bg="#f8f8f2", fg="black", height=55, bd=1, width=55)
 cus_importcustomerLabel.pack(side="left")
 
 usr_exp = PIL.Image.open("images/export.png")
@@ -751,7 +751,7 @@ def cus_add_customer():
     print(scll.get("1.0", END))
     add_customer.destroy()
   def cus_add_cst():
-    cst_id=cu_idr.get()#id
+    cst_id=b1sd.get()#id
     if cst_id==0 or None:
           
           pass
@@ -766,9 +766,9 @@ def cus_add_customer():
       cus_bs_fax=bs_fax.get()#bs fax
       cus_bs_mob=bs_mobi.get()#bs mob
       cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
-      cus_bs_spc_tax=cus_sp_tx.get()# specific tax
-      cus_bs_spc_tax2=cus_sp_tx2.get()# specific tax
-      cus_bs_dis=cus_sp_disc.get()# discount
+      cus_bs_spc_tax=blsr.get()# specific tax
+      cus_bs_spc_tax2=bdsfd14.get()# specific tax
+      cus_bs_dis=b1f2.get()# discount
       cus_bs_ctr=bs_cus_ct.get()# customer category
 
       # ship 
@@ -822,7 +822,7 @@ def cus_add_customer():
   a3=Label(Labelframe1,text="Status :")
   a3.place(x=620,y=7)
   cu_idr=IntVar() 
-  b1=Entry(Labelframe1, textvariable = cu_idr)
+  b1sd=Entry(Labelframe1)
   cus_catg=StringVar() 
   b2=ttk.Combobox(Labelframe1,textvariable = cus_catg)    
   b2['values'] = ('Default')  
@@ -830,7 +830,7 @@ def cus_add_customer():
   b2.current(0)
   a1.place(x=10,y=7)
   a2.place(x=330,y=7)   
-  b1.place(x=120,y=7,width=200)
+  b1sd.place(x=120,y=7,width=200)
   b2.place(x=390,y=7,width=220)
   cus_st = IntVar()
   chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = cus_st, onvalue = 1, offvalue = 0)
@@ -916,7 +916,7 @@ def cus_add_customer():
         :param value:
         :return:
         """
-        pattern = r'^[0-9]\d{9}$'
+        pattern = r'^[0-9]\d{0-12}$'
         if re.fullmatch(pattern, value) is None:
             
             return False
@@ -1074,13 +1074,14 @@ def cus_add_customer():
   cus_sp_disc=IntVar()
   chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = cus_ds_chk, onvalue = 1, offvalue = 0, font=("arial", 8))
   chkbtn1.place(x=10,y=6)
+  chkbtn1.select()
 
   
   a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
   
-  cus_sp_disc = IntVar(Labelframe6, value='0')
+  cus_sp_disc = IntVar(Labelframe6)
   
-  b12=Entry(Labelframe6,textvariable=cus_sp_disc).place(x=80,y=30,width=70)
+  
   #-----------------------------------------------------------------------------------------------tax2
   swt='select taxtype from company'
   fbcursor.execute(swt)
@@ -1088,26 +1089,47 @@ def cus_add_customer():
   print(fdt[0])
   if fdt[0]=='2':
     a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-    b11=Entry(Labelframe6, textvariable=cus_sp_tx).place(x=250,y=7,width=70)
-    b14=Entry(Labelframe6,textvariable=cus_sp_tx2).place(x=250,y=30,width=70)
+    blsr=Entry(Labelframe6, )
+    def tax_frt(S,d):
+      if d=='1':
+        if not S in ['.','0','1','2','3','4','5','6','7','8','9']:
+          return False
+        return True
+        
+      if d.isdigit():
+        return True
+
+
+    edt_lty=(Labelframe6.register(tax_frt), '%S','%d')
+    # edt_ltyr=(Labelframe6.register(tax_frtinv),)
+    blsr.config(validate='key',validatecommand=(edt_lty))
+    blsr.place(x=250,y=7,width=70)
+    bdsfd14=Entry(Labelframe6)
+    bdsfd14.config(validate='key',validatecommand=(edt_lty))
+    bdsfd14.place(x=250,y=30,width=70)
     a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
   elif fdt[0]=='1':
     a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-    b11=Entry(Labelframe6, textvariable=cus_sp_tx).place(x=250,y=7,width=70)
+    blsr=Entry(Labelframe6, textvariable=cus_sp_tx)
+    blsr.config(validate='key',validatecommand=(edt_lty))
+    blsr.place(x=250,y=7,width=70)
   elif fdt[0]=='0':
     pass
+  b1f2=Entry(Labelframe6)
+  b1f2.config(validate='key',validatecommand=(edt_lty))
+  b1f2.place(x=80,y=30,width=70)
 
   Labelframe7=LabelFrame(Labelframe1,text="Customer type")
   Labelframe7.place(x=10,y=405,width=340,height=90)
   bs_cus_ct=StringVar()
-  r1=Radiobutton(Labelframe7, text = "Client", variable = bs_cus_ct, value =0)
+  r1=Radiobutton(Labelframe7, text = "Client", variable = bs_cus_ct, value ="Client")
   r1.select()
   r1.place(x=5,y=15)
   
-  r2=Radiobutton(Labelframe7, text = "Vender", variable = bs_cus_ct, value = 1)
+  r2=Radiobutton(Labelframe7, text = "Vender", variable = bs_cus_ct, value = "Vender")
   r2.deselect()
   r2.place(x=90,y=15)
-  r3=Radiobutton(Labelframe7, text = "Both(Client/Vender)", variable = bs_cus_ct, value = 2)
+  r3=Radiobutton(Labelframe7, text = "Both(Client/Vender)", variable = bs_cus_ct, value = "Both(Client/Vender)")
   r3.deselect()
   r3.place(x=180,y=15)
 
@@ -1154,9 +1176,7 @@ def cus_edit_customer():
     edit_customer.destroy()
 
   def cus_edit_cst():
-    print("dshfgjshgfjsdhgfdj")
-    print(b1s.get())
-    print("dshfgjshgfjsdhgfdj")
+   
     cst_id=b1s.get()#id
     cus_bs_nm=bnm_cus.get()#bs name
     # cmp_id=
@@ -1496,10 +1516,25 @@ def cus_edit_customer():
 
   a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
   a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
-  cus_sp_disc = IntVar(Labelframe6, value='0')
-  
+  cus_sp_disc = IntVar(Labelframe6)
+
   cus_sp_disc=Entry(Labelframe6)
+  def tax_frt(S,d):
+      if d=='1':
+        if not S in ['.','0','1','2','3','4','5','6','7','8','9']:
+          return False
+        return True
+        
+      if d.isdigit():
+        return True
+
+
+  edt_lty=(Labelframe6.register(tax_frt), '%S','%d')
+    # edt_ltyr=(Labelframe6.register(tax_frtinv),)
+
+
   cus_sp_disc.insert(0,cus_ins_val[19])
+  cus_sp_disc.config(validate='key',validatecommand=(edt_lty))
   cus_sp_disc.place(x=80,y=30,width=70)
 
   swt='select taxtype from company'
@@ -1510,9 +1545,11 @@ def cus_edit_customer():
     a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
     cus_sp_tx=Entry(Labelframe6)
     cus_sp_tx.insert(0,cus_ins_val[18])
+    cus_sp_tx.config(validate='key',validatecommand=(edt_lty))
     cus_sp_tx.place(x=250,y=7,width=70)
     cus_sp_tx2=Entry(Labelframe6)
     cus_sp_tx2.insert(0,cus_ins_val[25])
+    cus_sp_tx2.config(validate='key',validatecommand=(edt_lty))
     cus_sp_tx2.place(x=250,y=30,width=70)
     
     a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
@@ -1520,6 +1557,7 @@ def cus_edit_customer():
     a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
     cus_sp_tx=Entry(Labelframe6)
     cus_sp_tx.insert(0,cus_ins_val[18])
+    cus_sp_tx.config(validate='key',validatecommand=(edt_lty))
     cus_sp_tx.place(x=250,y=7,width=70)
   elif fdt[0]=='0':
     pass
@@ -1588,7 +1626,7 @@ def cus_delete_customer():
   sql_qr_val=(cus_id,)
   fbcursor.execute(sql_qr,sql_qr_val)
   fbilldb.commit()
-  
+  cus_main_tree.selection_set(1)
 
   for record in cus_main_tree.get_children():
     cus_main_tree.delete(record)
@@ -1600,6 +1638,7 @@ def cus_delete_customer():
   for i in main_tb_val:
     cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
     count_cus +=1
+
 #-----------------------------------------------------------------------------------Preview Invoice Customer
 def cus_previewinvoice_customer():
   cus_in_preview = Toplevel()
@@ -1714,17 +1753,21 @@ def cus_previewinvoice_customer():
 
   count=0
   for i in tre:
+    if i[24] is None:
+      dfh="No"
+    else:
+      dfh="Yes"
     if ps_cr=="before amount":
-      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],"",i[5], crc+str(i[8]), crc+str(i[9]), crc+str(i[10])))
+      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], crc+str(i[8]), crc+str(i[9]), crc+str(i[10])))
                      
     elif ps_cr=="after amount":
-      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],"",i[5], str(i[8])+crc, str(i[9])+crc,str(i[10])+crc))
+      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], str(i[8])+crc, str(i[9])+crc,str(i[10])+crc))
                       
     elif ps_cr=="before amount with space":
-      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],"",i[5], crc+" "+str(i[8]), crc+" "+str(i[9]), crc+" "+str(i[10])))
+      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], crc+" "+str(i[8]), crc+" "+str(i[9]), crc+" "+str(i[10])))
                       
     elif ps_cr=="after amount with space":
-      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],"",i[5],  str(i[8])+" "+crc, str(i[9])+" "+crc,str(i[10])+" "+crc))
+      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5],  str(i[8])+" "+crc, str(i[9])+" "+crc,str(i[10])+" "+crc))
                       
                    
     else:
@@ -1874,12 +1917,16 @@ def cus_printinvoice_customer():
                         pdf.showPage()
                         x=750
                     else:
+                        if i[24] is None:
+                            dfh="No"
+                        else:
+                            dfh="Yes"
                         if ps_cr=="before amount":
                             pdf.drawString(28,x,str(i[1]))
                       
                             pdf.drawString(100,x,str(i[2]))
                             pdf.drawString(168,x,str(i[3]))
-                            pdf.drawString(240,x,"fdhkhkk")
+                            pdf.drawString(250,x,dfh)
                             pdf.drawString(315,x,str(i[5])) 
                             pdf.drawString(380,x,str(crc)+str(i[8]))
                             pdf.drawString(460,x,str(crc)+str(i[9]))
@@ -1889,7 +1936,7 @@ def cus_printinvoice_customer():
                             pdf.drawString(28,x,str(i[1]))
                             pdf.drawString(100,x,str(i[2]))
                             pdf.drawString(168,x,str(i[3]))
-                            pdf.drawString(240,x,str(" "))
+                            pdf.drawString(250,x,str(dfh))
                             pdf.drawString(315,x,str(i[5])) 
                             pdf.drawString(380,x,str(i[8])+str(crc))
                             pdf.drawString(460,x,str(i[9])+str(crc))
@@ -1900,7 +1947,7 @@ def cus_printinvoice_customer():
                       
                             pdf.drawString(100,x,str(i[2]))
                             pdf.drawString(168,x,str(i[3]))
-                            pdf.drawString(240,x,str(""))
+                            pdf.drawString(250,x,str(dfh))
                             pdf.drawString(315,x,str(i[5])) 
                             pdf.drawString(380,x,str(crc)+" "+str(i[8]))
                             pdf.drawString(460,x,str(crc)+" "+str(i[9]))
@@ -1911,7 +1958,7 @@ def cus_printinvoice_customer():
                             pdf.drawString(28,x,str(i[1]))
                             pdf.drawString(100,x,str(i[2]))
                             pdf.drawString(168,x,str(i[3]))
-                            pdf.drawString(240,x,str(" "))
+                            pdf.drawString(250,x,str(dfh))
                             pdf.drawString(315,x,str(i[5])) 
                             pdf.drawString(380,x,str(i[8])+" "+str(crc))
                             pdf.drawString(460,x,str(i[9])+" "+str(crc))
@@ -2001,6 +2048,318 @@ def cus_customersms():
   checkvar1=IntVar()
   chkbtn1=Checkbutton(tiplbf,text="I have read and agree to the terms of service above",variable=checkvar1,onvalue=1,offvalue=0).place(x=130, y=200)  
 #-----------------------------------------------------------------------------------Import Customer
+def import_customer_check():
+    sql = "select * from users"
+    fbcursor.execute(sql)
+    delexp_check_user = fbcursor.fetchall()
+    if not delexp_check_user:
+      fileimport_customer()
+    else:
+      try:
+        user_namech = username1.get()
+        sql = "select import_customer from users where username = %s"
+        val = (user_namech,)
+        fbcursor.execute(sql,val)
+        disable_del_exp = fbcursor.fetchone()
+        if disable_del_exp[0] == 1:
+          fileimport_customer()
+        else:
+          messagebox.showerror("user","user does not have permission to perform this action")
+      except:
+        fileimport_customer()
+
+def fileimport_customer():
+
+    top=Toplevel()
+    top.title("Import items list from Excel(XLS)File")
+    top.geometry("785x520+280+100")
+    importframe=Frame(top)
+    importframe.place(x=0,y=0,height=700,width=785)
+    impolbl=Label(importframe,text="Import source Excel(xlsx) File:").place(x=8,y=30)
+    impoentry=Entry(importframe,bg="white")
+    impoentry.place(x=8,y=50,width=280, height=25)
+    previewlbl=Label(importframe,text="Source File preview").place(x=8,y=77)
+   
+    ###### LISTBOX #####################
+    scrollbarx = Scrollbar(importframe, orient=HORIZONTAL)
+    scrollbary = Scrollbar(importframe, orient=VERTICAL)
+    imptree = ttk.Treeview(importframe, columns=("customerid","ccategory","cname","caddress","ctel","cfax","cemail","ccontact","cshipname","cshipaddress","cshiptel","cshipfax","cshipcontact","specialtax1","specialtax2","discountrate","cshipemail","vatregnumber","country","city", "taxexempt","cactive"), height=400,     selectmode="extended", yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+    scrollbary.config(command=imptree.yview)
+    scrollbary.place(x=754,y=100,height=325)
+    scrollbarx.config(command=imptree.xview)
+    scrollbarx.place(x=0,y=410, width=356)
+    imptree.heading('customerid', text="customerid", anchor=W)
+    imptree.heading('ccategory', text="ccategory", anchor=W)
+    imptree.heading('cname', text="cname", anchor=W)
+    imptree.heading('caddress', text="caddress", anchor=W)
+    imptree.heading('ctel', text="ctel", anchor=W)
+    imptree.heading('cfax', text="cfax", anchor=W)
+    imptree.heading('cemail', text="cemail", anchor=W)
+    imptree.heading('ccontact', text="ccontact", anchor=W)
+    imptree.heading('cshipname', text="cshipname", anchor=W)
+    imptree.heading('cshipaddress', text="cshipaddress", anchor=W)
+    imptree.heading('cshiptel', text="cshiptel", anchor=W)
+    imptree.heading('cshipfax', text="cshipfax", anchor=W)
+    imptree.heading('cshipcontact', text="cshipcontact", anchor=W)
+    imptree.heading('specialtax1', text="specialtax1", anchor=W)
+    imptree.heading('discountrate', text="discountrate", anchor=W)
+    imptree.heading('cshipemail', text="cshipemail", anchor=W)
+    imptree.heading('vatregnumber', text="vatregnumber", anchor=W)
+    imptree.heading('country', text="country", anchor=W)
+    imptree.heading('city', text="city", anchor=W)
+    imptree.heading('taxexempt', text="taxexempt", anchor=W)
+    imptree.heading('cactive', text="cactive", anchor=W)
+    
+
+    imptree.column('#0', stretch=NO, minwidth=0, width=0)
+    imptree.column('#1', stretch=NO, minwidth=0, width=120)
+    imptree.column('#2', stretch=NO, minwidth=0, width=100)
+    imptree.column('#3', stretch=NO, minwidth=0, width=100)
+    imptree.column('#4', stretch=NO, minwidth=0, width=100)
+    imptree.column('#5', stretch=NO, minwidth=0, width=100)
+    imptree.column('#6', stretch=NO, minwidth=0, width=100)
+    imptree.column('#7', stretch=NO, minwidth=0, width=100)
+    imptree.column('#8', stretch=NO, minwidth=0, width=100)
+    imptree.column('#9', stretch=NO, minwidth=0, width=100)
+    imptree.column('#10', stretch=NO, minwidth=0, width=100)
+    imptree.column('#11', stretch=NO, minwidth=0, width=100)
+    imptree.column('#12', stretch=NO, minwidth=0, width=100)
+    imptree.column('#13', stretch=NO, minwidth=0, width=100)
+    imptree.column('#14', stretch=NO, minwidth=0, width=100)
+    imptree.column('#15', stretch=NO, minwidth=0, width=100)
+    imptree.column('#16', stretch=NO, minwidth=0, width=100)
+    imptree.column('#17', stretch=NO, minwidth=0, width=100)
+    imptree.column('#18', stretch=NO, minwidth=0, width=100)
+    imptree.column('#19', stretch=NO, minwidth=0, width=100)
+    imptree.column('#20', stretch=NO, minwidth=0, width=100)
+
+
+ 
+
+    imptree.place(x=5,y=100,height=315,width=750)
+    
+    
+    lb1=Label(importframe,text="Select import source XLs file first after build column associations").place(x=8,y=480)
+
+    def cus_export_product_1():
+      global Productserviceid,name12,category12,description,peices,cost12,priceminuscost,taxable,stock12,stocklimit,warehouse,status,serviceornot,name
+      name = askopenfilename(filetypes=[('CSV', '*.csv',), ('Excel', ('*.xls', '*.xslm', '*.xlsx'))])
+      # df = pd.read_csv(name)
+      # for i in df:
+      #   listbox.insert(END, df)
+      with open(name) as f:
+        reader = csv.DictReader(f, delimiter=',')
+        print(reader)
+        for row in reader:
+          #"customerid","ccategory","cname","caddress","ctel","cfax","cemail","ccontact","cshipname","cshipaddress","cshiptel","cshipfax","cshipcontact","specialtax1","specialtax2","discountrate","cshipemail","vatregnumber","country","city", "taxexempt","cactive"
+          customerid = row['customerid']
+          ccategory = row['ccategory']          
+          cname = row['cname']
+          caddress = row['caddress']
+          
+          ctel = row['ctel']
+          cfax = row['cfax']
+          cemail = row['cemail']
+          ccontact = row['ccontact']
+          cshipname = row['cshipname']
+          cshipaddress = row['cshipaddress']
+          cshiptel = row['cshiptel']
+          cshipfax = row['cshipfax']
+          cshipcontact = row['cshipcontact']
+          specialtax1 = row['specialtax1']
+          specialtax2 = row['specialtax2']
+          discountrate = row['discountrate']
+          cshipemail = row['cshipemail']
+          vatregnumber = row['vatregnumber']
+          country = row['country']
+          city = row['city']
+          taxexempt = row['taxexempt']
+          cactive = row['cactive']
+          
+        # "customerid","ccategory","cname","caddress","ctel","cfax","cemail","ccontact","cshipname","cshipaddress","cshiptel","cshipfax","cshipcontact","specialtax1","specialtax2","discountrate","cshipemail","vatregnumber","country","city", "taxexempt","cactive"
+        
+          imptree.insert("", 0, values=(customerid,ccategory,cname,caddress,ctel,cfax,cemail,ccontact,cshipname,cshipaddress,cshiptel,cshipfax,cshipcontact,specialtax1,specialtax2,discountrate,cshipemail,vatregnumber,country,city, taxexempt,cactive))
+
+      impoentry.delete(0, 'end')
+      impoentry.insert(0, name)
+      
+    def cus_nxtscreen():
+      def cus_save_pro_import():
+        with open(name) as f:
+          reader = csv.DictReader(f, delimiter=',')
+          for row in reader:
+            customerid = row['customerid']
+            ccategory = row['ccategory']          
+            cname = row['cname']
+            caddress = row['caddress']
+            
+            ctel = row['ctel']
+            cfax = row['cfax']
+            cemail = row['cemail']
+            ccontact = row['ccontact']
+            cshipname = row['cshipname']
+            cshipaddress = row['cshipaddress']
+            cshiptel = row['cshiptel']
+            cshipfax = row['cshipfax']
+            cshipcontact = row['cshipcontact']
+            specialtax1 = row['specialtax1']
+            specialtax2 = row['specialtax2']
+            discountrate = row['discountrate']
+            cshipemail = row['cshipemail']
+            vatregnumber = row['vatregnumber']
+            country = row['country']
+            city = row['city']
+            taxexempt = row['taxexempt']
+            cactive = row['cactive']
+
+
+            # Productserviceid = int(row['PRODUCT SERVICE ID'])
+            # sku = int(row['CODE OR SKU'])  
+            # name12 = row['NAME']
+            # category12 = row['CATEGORY']
+            # description = row['DESCRIPTION']
+            # peices = int(row['QTY UNIT'])
+            # cost12 = int(row['COST'])
+            # unitprice = int(row['PRICE'])
+            # taxable = int(row['TAX1'])
+            # tax2 = row['TAX2']
+            # stock12 = int(row['STOCK'])
+            # stocklimit = int(row['LOW STOCK'])
+            # warehouse = row['LOCATION']
+            # status = int(row['ACTIVE'])
+            # serviceornot = int(row['SERVICE'])
+            # min = int(unitprice) - int(cost12)
+
+            sql = 'select * from customer where customerno = %s or 	businessname = %s'
+            val  = (customerid, cname,)
+            fbcursor.execute(sql, val)
+            fbcursor.fetchall()
+            row_count = fbcursor.rowcount
+            if row_count == 0:
+
+              sql = 'insert into customer(customerno,	category,businessname,businessaddress,cptelno,cpfax,cpemail,contactperson,shipname,shipaddress,shipcptelno,shipcpfax,shipcontactperson,specifictax1,specifictax2,discount,shipcpemail,vatregnumber,country,city, taxexempt,status) values(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s,%s,%s,%s,%s,%s,%s,%s,%s,%s)'
+              val = (customerid,ccategory,cname,caddress,ctel,cfax,cemail,ccontact,cshipname,cshipaddress,cshiptel,cshipfax,cshipcontact,specialtax1,specialtax2,discountrate,cshipemail,vatregnumber,country,city, taxexempt,cactive)
+              fbcursor.execute(sql, val)
+              fbilldb.commit()
+              topp.destroy()
+              for record in cus_main_tree.get_children():
+                cus_main_tree.delete(record)
+              fbcursor.execute("select *  from customer")
+              pandsdata = fbcursor.fetchall()
+              countp = 0
+              for i in pandsdata:
+                cus_main_tree.insert(parent='', index='end', iid=countp, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+                countp +=1
+                
+              topp.destroy()
+              messagebox.showinfo("Alert", "Customer Import Completed")
+            else:
+              
+              messagebox.showinfo("Alert", "Entry with same name or ID already exists.\nTry again.")
+            
+     
+      topp=Toplevel()
+      topp.title("Import items list from Excel(XLS)File")
+      topp.geometry("785x520+280+100")
+      scrollbarx = Scrollbar(topp, orient=HORIZONTAL)
+      scrollbary = Scrollbar(topp, orient=VERTICAL)
+      cus_nxttree = ttk.Treeview(topp, columns=("customerid","ccategory","cname","caddress","ctel","cfax","cemail","ccontact","cshipname","cshipaddress","cshiptel","cshipfax","cshipcontact","specialtax1","specialtax2","discountrate","cshipemail","vatregnumber","country","city", "taxexempt","cactive"),height=400,     selectmode="extended", yscrollcommand=scrollbary.set, xscrollcommand=scrollbarx.set)
+      scrollbary.config(command=cus_nxttree.yview)
+      scrollbary.place(x=768,y=0,height=490)
+      scrollbarx.config(command=cus_nxttree.xview)
+      scrollbarx.place(x=0,y=470,width=763)
+      cus_nxttree.heading('customerid', text="customerid", anchor=W)
+      cus_nxttree.heading('ccategory', text="ccategory", anchor=W)
+      cus_nxttree.heading('cname', text="cname", anchor=W)
+      cus_nxttree.heading('caddress', text="caddress", anchor=W)
+      cus_nxttree.heading('ctel', text="ctel", anchor=W)
+      cus_nxttree.heading('cfax', text="cfax", anchor=W)
+      cus_nxttree.heading('cemail', text="cemail", anchor=W)
+      cus_nxttree.heading('ccontact', text="ccontact", anchor=W)
+      cus_nxttree.heading('cshipname', text="cshipname", anchor=W)
+      cus_nxttree.heading('cshipaddress', text="cshipaddress", anchor=W)
+      cus_nxttree.heading('cshiptel', text="cshiptel", anchor=W)
+      cus_nxttree.heading('cshipfax', text="cshipfax", anchor=W)
+      cus_nxttree.heading('cshipcontact', text="cshipcontact", anchor=W)
+      cus_nxttree.heading('specialtax1', text="specialtax1", anchor=W)
+      cus_nxttree.heading('discountrate', text="discountrate", anchor=W)
+      cus_nxttree.heading('cshipemail', text="cshipemail", anchor=W)
+      cus_nxttree.heading('vatregnumber', text="vatregnumber", anchor=W)
+      cus_nxttree.heading('country', text="country", anchor=W)
+      cus_nxttree.heading('city', text="city", anchor=W)
+      cus_nxttree.heading('taxexempt', text="taxexempt", anchor=W)
+      cus_nxttree.heading('cactive', text="cactive", anchor=W)
+  
+      cus_nxttree.column('#0', stretch=NO, minwidth=0, width=0)
+      cus_nxttree.column('#1', stretch=NO, minwidth=0, width=120)
+      cus_nxttree.column('#2', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#3', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#4', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#5', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#6', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#7', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#8', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#9', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#10', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#11', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#12', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#13', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#14', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#15', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#16', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#17', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#18', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#19', stretch=NO, minwidth=0, width=100)
+      cus_nxttree.column('#20', stretch=NO, minwidth=0, width=100)
+    
+      with open(name) as f:
+        reader = csv.DictReader(f, delimiter=',')
+        for row in reader:
+          # "PRODUCT SERVICE ID","NAME","CATEGORY","DESCRIPTION","QTY UNIT","COST","PRICE","TAX1","STOCK","LOW STOCK","LOCATION","ACTIVE","SERVICE"
+          customerid = row['customerid']
+          ccategory = row['ccategory']          
+          cname = row['cname']
+          caddress = row['caddress']
+          
+          ctel = row['ctel']
+          cfax = row['cfax']
+          cemail = row['cemail']
+          ccontact = row['ccontact']
+          cshipname = row['cshipname']
+          cshipaddress = row['cshipaddress']
+          cshiptel = row['cshiptel']
+          cshipfax = row['cshipfax']
+          cshipcontact = row['cshipcontact']
+          specialtax1 = row['specialtax1']
+          specialtax2 = row['specialtax2']
+          discountrate = row['discountrate']
+          cshipemail = row['cshipemail']
+          vatregnumber = row['vatregnumber']
+          country = row['country']
+          city = row['city']
+          taxexempt = row['taxexempt']
+          cactive = row['cactive']
+      
+
+      
+          cus_nxttree.insert("", 0, values=(customerid,ccategory,cname,caddress,ctel,cfax,cemail,ccontact,cshipname,cshipaddress,cshiptel,cshipfax,cshipcontact,specialtax1,specialtax2,discountrate,cshipemail,vatregnumber,country,city, taxexempt,cactive))
+       
+    
+      cus_nxttree.place(x=0,y=0,height=470,width=770)
+      back = Button(topp,text="back",command=lambda:topp.destroy())
+      back.place(x=5,y=492)
+      Finish = Button(topp,text="Finish",command=cus_save_pro_import)
+      Finish.place(x=740,y=492)
+     
+    
+    importbutton=Button(top,command=cus_export_product_1,text = 'Browse',compound=LEFT)
+    importbutton.place(x=290,y=48,height=25,width=80)
+
+    
+    n = Button(importframe, text ="Next",command=cus_nxtscreen).place(x=710,y=470)
+  
+    
+    top.mainloop()
 def cus_import_customer():
     top=Toplevel()
     top.title("Import Customers list from Excel(XLS)File")
@@ -2204,7 +2563,7 @@ def cus_export_customer():
     lst = []
     with open(path, "w", newline='') as myfile:
       csvwriter = csv.writer(myfile, delimiter=',')
-      sql = 'select 	customerid ,category,businessname,businessaddress,cptelno,cpfax,cpemail,	contactperson,shipname,shipaddress,shipcptelno,shipcpfax,shipcontactperson,specifictax1,specifictax2,discount,shipcpemail,country,country,city, taxexempt,status from customer'
+      sql = 'select 	customerno ,category,businessname,businessaddress,cptelno,cpfax,cpemail,	contactperson,shipname,shipaddress,shipcptelno,shipcpfax,shipcontactperson,specifictax1,specifictax2,discount,shipcpemail,country,country,city, taxexempt,status from customer'
          
       fbcursor.execute(sql)
       pandsdata = fbcursor.fetchall()
@@ -2217,6 +2576,123 @@ def cus_export_customer():
           csvwriter.writerow(row)
 #-----------------------------------------------------------------------------------Search Customer
 def cus_search_customers():
+    def find_cus_row():
+      print(find_txt_var.get())
+      if find_txt_var.get()=="Customer name":
+        fnd_sql="select * from customer where businessname=%s"
+        fnd_sql_val=(fnd_srh_txt.get(),)
+        fbcursor.execute(fnd_sql,fnd_sql_val)
+        htj=fbcursor.fetchall()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        count_cus=0
+
+        for i in htj:
+          
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        top.destroy()
+      elif find_txt_var.get()=="Customer ID":
+        fnd_sql="select * from customer where customerno=%s"
+        fnd_sql_val=(fnd_srh_txt.get(),)
+        fbcursor.execute(fnd_sql,fnd_sql_val)
+        htj=fbcursor.fetchall()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        count_cus=0
+
+        for i in htj:
+        
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        top.destroy()
+      elif find_txt_var.get()=="Category":
+        fnd_sql="select * from customer where category=%s"
+        fnd_sql_val=(fnd_srh_txt.get(),)
+        fbcursor.execute(fnd_sql,fnd_sql_val)
+        htj=fbcursor.fetchall()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        count_cus=0
+
+        for i in htj:
+        
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        top.destroy()
+      elif find_txt_var.get()=="Contact Person":
+        fnd_sql="select * from customer where contactperson=%s"
+        fnd_sql_val=(fnd_srh_txt.get(),)
+        fbcursor.execute(fnd_sql,fnd_sql_val)
+        htj=fbcursor.fetchall()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        count_cus=0
+
+        for i in htj:
+          
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        top.destroy()
+      elif find_txt_var.get()=="Customer Tel.":
+        fnd_sql="select * from customer where cptelno=%s"
+        fnd_sql_val=(fnd_srh_txt.get(),)
+        fbcursor.execute(fnd_sql,fnd_sql_val)
+        htj=fbcursor.fetchall()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        count_cus=0
+
+        for i in htj:
+          
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        top.destroy()
+      elif find_txt_var.get()=="SMS number":
+        fnd_sql="select * from customer where cpmobileforsms=%s"
+        fnd_sql_val=(fnd_srh_txt.get(),)
+        fbcursor.execute(fnd_sql,fnd_sql_val)
+        htj=fbcursor.fetchall()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        count_cus=0
+
+        for i in htj:
+          
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        top.destroy()
+      elif find_txt_var.get()=="Type":
+        fnd_sql="select * from customer where customertype=%s"
+        fnd_sql_val=(fnd_srh_txt.get(),)
+        fbcursor.execute(fnd_sql,fnd_sql_val)
+        htj=fbcursor.fetchall()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        count_cus=0
+
+        for i in htj:
+          
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        top.destroy()
+      elif find_txt_var.get()=="<<All>>":
+        fnd_sql="select * from customer"
+        fnd_sql_val=(fnd_srh_txt.get(),)
+        fbcursor.execute(fnd_sql,fnd_sql_val)
+        htj=fbcursor.fetchall()
+        for record in cus_main_tree.get_children():
+          cus_main_tree.delete(record)
+        count_cus=0
+
+        for i in htj:
+          
+          cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+          count_cus +=1
+        top.destroy()
+    def fnd_dist():
+      top.destroy()
+
     top = Toplevel()  
     top.title("Find Text")
     p2 = PhotoImage(file = "images/fbicon.png")
@@ -2224,19 +2700,19 @@ def cus_search_customers():
     top.geometry("520x180+390+250")
     findwhat1=Label(top,text="Find What:")
     findwhat1.place(x=5,y=15)
-    n = StringVar() 
-    findwhat = ttk.Combobox(top, width = 50, textvariable = n )
+    fnd_srh_txt = StringVar() 
+    findwhat = ttk.Combobox(top, width = 50, textvariable = fnd_srh_txt )
     findwhat.place(x=85,y=15,height=23) 
-    findButton = Button(top, text ="Find next",width=10)
+    findButton = Button(top, text ="Find next",width=10, command=lambda:find_cus_row())
     findButton.place(x=420,y=15)
     findin1=Label(top,text="Find in:")
     findin1.place(x=5,y=40)
-    n = StringVar() 
-    findIN = ttk.Combobox(top, width = 37, textvariable = n )
+    find_txt_var = StringVar() 
+    findIN = ttk.Combobox(top, width = 37, textvariable =find_txt_var )
     findIN['values'] = ('Customer name',  
                               'Customer ID', 
                               'Category', 
-                              'Customer name', 
+                           
                               'Contact Person', 
                               'Customer Tel.', 
                               'SMS number',
@@ -2244,21 +2720,22 @@ def cus_search_customers():
                               '<<All>>')    
     findIN.place(x=85,y=40,height=23) 
     findIN.current(0)
-    closeButton = Button(top, text ="Close",width=10)
+    closeButton = Button(top, text ="Close",width=10, command=lambda:fnd_dist())
     closeButton.place(x=420,y=45)
     match1=Label(top,text="Match:")
     match1.place(x=5,y=65)
-    n = StringVar() 
-    match = ttk.Combobox(top, width = 27, textvariable = n ) 
+    match_var = StringVar() 
+    match = ttk.Combobox(top, width = 27, textvariable = match_var ) 
     match['values'] = ('From any part of the field','Whole field',  
                               'From beging of field')
     match.place(x=85,y=65,height=23) 
     match.current(0)
     search1=Label(top,text="Search:")
     search1.place(x=5,y=90)
-    n = StringVar() 
-    search = ttk.Combobox(top, width = 27, textvariable = n )
+    up_var = StringVar() 
+    search = ttk.Combobox(top, width = 27, textvariable = up_var)
     search['values'] = ('Up','Down','All') 
+    search.current(0)
     search.place(x=85,y=90,height=23) 
     checkvarStatus4=IntVar()
     Button4 = Checkbutton(top,variable = checkvarStatus4, 
@@ -2267,6 +2744,7 @@ def cus_search_customers():
                       offvalue = 1,
                       height=3,
                       width = 15)
+    Button4.select()
     Button4.place(x=60,y=120)
     checkvarStatus5=IntVar()  
     Button5 = Checkbutton(top,variable = checkvarStatus5, 
@@ -2275,6 +2753,7 @@ def cus_search_customers():
                       offvalue = 1,
                       height=3,
                       width = 15)
+    Button5.select()
     Button5.place(x=270,y=120)
     top.mainloop()
 #-----------------------------------------------------------------------------------Refresh Customer
@@ -2301,6 +2780,7 @@ def cus_inv_btm1():
     
     cus_inv2_tree.place(x=0,y=415,height=280)
     cus_inv2_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_inv2_vertical_bar.config(command=cus_inv2_tree.yview)
     cus_inv2_vertical_bar.place(x=1083,y=415,height=280)
     cus_inv2_tree["columns"]=("1","2","3","4","5","6","7","8","9")
     cus_inv2_tree["show"]='headings'
@@ -2342,17 +2822,21 @@ def cus_inv_btm1():
     cency_pos=post_rp[0]
   
     for i in main_tb_val:
+      if i[24] is None:
+        dfh="No"
+      else:
+        dfh="Yes"
       if cency_pos=="before amount":   
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
         count_cus +=1
       elif cency_pos=="after amount": 
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
         count_cus +=1
       elif cency_pos=="before amount with space": 
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
         count_cus +=1 
       elif cency_pos=="after amount with space":
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
         count_cus +=1
       else:
         pass
@@ -2364,6 +2848,7 @@ def cus_inv_btm(event):
     
     cus_inv2_tree.place(x=0,y=415,height=280)
     cus_inv2_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_inv2_vertical_bar.config(command=cus_inv2_tree.yview)
     cus_inv2_vertical_bar.place(x=1083,y=415,height=280)
     cus_inv2_tree["columns"]=("1","2","3","4","5","6","7","8","9")
     cus_inv2_tree["show"]='headings'
@@ -2388,7 +2873,7 @@ def cus_inv_btm(event):
     cus_inv2_tree.heading("8",text="Total Paid")
     cus_inv2_tree.heading("9",text="Balance")
     cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
-
+ 
     cus_main_table_sql="select * from invoice where businessname=%s"
     cus_main_table_sql_val=(cus_id,)
     fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
@@ -2405,18 +2890,22 @@ def cus_inv_btm(event):
     
 
     for i in main_tb_val:
+      if i[24] is None:
+        dfh="No"
+      else:
+        dfh="Yes"
       
       if cency_pos=="before amount":   
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
         count_cus +=1
       elif cency_pos=="after amount": 
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
         count_cus +=1
       elif cency_pos=="before amount with space": 
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
         count_cus +=1 
       elif cency_pos=="after amount with space":
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
+        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
         count_cus +=1
       else:
         pass
@@ -2427,6 +2916,7 @@ def cus_ord_btm():
     cus_ord_tree=ttk.Treeview(tab7,selectmode='browse')
     cus_ord_tree.place(x=0,y=415,height=280)
     cus_ord_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_ord_vertical_bar.config(command=cus_ord_tree.yview)
     cus_ord_vertical_bar.place(x=1083,y=415,height=280)
     cus_ord_tree["columns"]=("1","2","3","4","5","6","7","8","9")
     cus_ord_tree["show"]='headings'
@@ -2488,6 +2978,7 @@ def cus_est_btm():
     cus_est_tree=ttk.Treeview(tab7,selectmode='browse')
     cus_est_tree.place(x=0,y=415,height=280)
     cus_est_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_est_vertical_bar.config(command=cus_est_tree.yview)
     cus_est_vertical_bar.place(x=1083,y=415,height=280)
     cus_est_tree["columns"]=("1","2","3","4","5","6","7","8","9")
     cus_est_tree["show"]='headings'
@@ -2550,6 +3041,8 @@ def cus_stm_btm():
     cus_stm_tree=ttk.Treeview(tab7,selectmode='browse')
     cus_stm_tree.place(x=0,y=415,height=280)
     cus_stm_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    
+    cus_stm_vertical_bar.config(command=cus_stm_tree.yview)
     cus_stm_vertical_bar.place(x=1083,y=415,height=280)
     cus_stm_tree["columns"]=("1","2","3","4","5","6","7","8","9")
     cus_stm_tree["show"]='headings'
@@ -2589,17 +3082,21 @@ def cus_stm_btm():
     post_rp=fbcursor.fetchone()
     cency_pos=post_rp[0]
     for i in main_tb_val:
+      if i[24] is None:
+        dfh="No"
+      else:
+        dfh="Yes"
       if cency_pos=="before amount": 
-        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
+        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
         count_cus +=1 
       elif cency_pos=="after amount":
-        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
+        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
         count_cus +=1
       elif cency_pos=="before amount with space":
-        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
+        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
         count_cus +=1
       elif cency_pos=="after amount with space":
-        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3]," ",i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
+        cus_stm_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
         count_cus +=1
       else:
         pass
@@ -2612,6 +3109,7 @@ def cus_pym_btm():
     cus_pym_tree=ttk.Treeview(tab7,selectmode='browse')
     cus_pym_tree.place(x=0,y=415,height=280)
     cus_pym_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_pym_vertical_bar.config(command=cus_pym_tree.yview)
     cus_pym_vertical_bar.place(x=1083,y=415,height=280)
     cus_pym_tree["columns"]=("1","2","3","4","5","6","7")
     cus_pym_tree["show"]='headings'
@@ -2679,6 +3177,7 @@ def cus_pod_btm():
     cus_por_tree=ttk.Treeview(tab7,selectmode='browse')
     cus_por_tree.place(x=0,y=415,height=280)
     cus_por_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+    cus_por_vertical_bar.config(command=cus_por_tree.yview)
     cus_por_vertical_bar.place(x=1083,y=415,height=280)
     cus_por_tree["columns"]=("1","2","3","4","5","6","7")
     cus_por_tree["show"]='headings'
@@ -2790,14 +3289,18 @@ def ct_filter(event):
     pass
 
 ####################################################################################################################
-
+def selct_all_cus():
+ 
+  cus_main_tree.selection()
 global cus_main_tree
 cus_main_s=ttk.Style()
 cus_main_s.configure('Treeview.Heading',background='white')
 cus_main_tree=ttk.Treeview(tab7,selectmode='browse')
-cus_main_tree.place(x=0,y=95,height=280)
+
 cus_main_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+cus_main_vertical_bar.config(command=cus_main_tree.yview)
 cus_main_vertical_bar.place(x=1083,y=95,height=280)
+cus_main_tree.place(x=0,y=95,height=280)
 cus_main_tree["columns"]=("1","2","3","4","5","6","7","8")
 cus_main_tree["show"]='headings'
 cus_main_tree.column("1",width=30,anchor='c')
@@ -2827,6 +3330,24 @@ for i in main_tb_val:
     count_cus +=1
 cus_main_tree.bind('<<TreeviewSelect>>',cus_inv_btm)
 # cus_main_tree.selection_set(9)
+def cus_my_popup(event):
+              cus_menu.tk_popup(event.x_root, event.y_root)
+              
+cus_menu= Menu(cus_main_tree, tearoff=False)
+cus_menu.add_command(label="Select All Rows", command=lambda:selct_all_cus())
+cus_menu.add_command(label="Unselect All Rows", command="lambda:category()")
+cus_menu.add_separator()
+cus_menu.add_command(label="Add New Customer", command=lambda:cus_add_customer())
+cus_menu.add_command(label="Edit/View Customer", command=lambda:cus_edit_customer())
+cus_menu.add_command(label="Delete Customer", command=lambda:cus_delete_customer())
+
+cus_menu.add_separator()
+cus_menu.add_command(label="Send Late Payment Email", command=lambda:cus_addemail_order())
+cus_menu.add_separator()
+cus_menu.add_command(label="Export List To Excel(xls)", command=lambda:cus_export_customer())
+cus_menu.add_separator()
+cus_menu.add_command(label="Search", command=lambda:cus_search_customers())
+cus_main_tree.bind("<Button-3>", cus_my_popup)
 
 
 #----------------------------------------------------------------------------Button bottam table-----
@@ -2849,6 +3370,7 @@ cus_inv_s.configure('Treeview.Heading',background='white')
 cus_inv_tree=ttk.Treeview(tab7,selectmode='browse')
 cus_inv_tree.place(x=0,y=415,height=280)
 cus_inv_vertical_bar=ttk.Scrollbar(tab7,orient="vertical")
+cus_inv_vertical_bar.config(command=cus_inv_tree.yview)
 cus_inv_vertical_bar.place(x=1083,y=415,height=280)
 cus_inv_tree["columns"]=("1","2","3","4","5","6","7","8","9")
 cus_inv_tree["show"]='headings'
