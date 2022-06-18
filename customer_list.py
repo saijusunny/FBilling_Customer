@@ -2,7 +2,7 @@ from cProfile import label
 from cgitb import text
 import csv
 from enum import auto
-
+import tkinter as tk
 from itertools import count
 from pydoc import describe
 import shutil
@@ -125,7 +125,7 @@ tab6=  ttk.Frame(tabControl)
 tab7 = ttk.Frame(tabControl)
 tab8 = ttk.Frame(tabControl)
 tab9 =  ttk.Frame(tabControl)
-tab10=  ttk.Frame(tabControl)
+tab10=  ttk.Frame(tabControl) 
 tabControl.add(tab1,image=invoices,compound = LEFT, text ='Invoices',)
 tabControl.add(tab2,image=orders,compound = LEFT, text ='Orders')
 tabControl.add(tab3,image=estimates,compound = LEFT, text ='Estimates')
@@ -265,11 +265,12 @@ cus_invoi1label.pack(side="right", padx=(0,160))
 
 def cus_dft(event):
   print(cus_fltr.get())
-  if cus_fltr.get()=="Default":
+  if cus_fltr.get() is not None:
     for record in cus_main_tree.get_children():
       cus_main_tree.delete(record)
-    table_sql='select * from customer where category="Default"'
-    fbcursor.execute(table_sql)
+    table_sql='select * from customer where category=%s'
+    vald=(cus_fltr.get(),)
+    fbcursor.execute(table_sql, vald)
     tb_val=fbcursor.fetchall()
     count_cus=0
 
@@ -287,41 +288,17 @@ def cus_dft(event):
     for i in main_tb_val:
       cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
       count_cus +=1
+  
 
 cus_fltr = StringVar()
 cus_flt=ttk.Combobox(customermain, textvariable=cus_fltr)
 cus_flt.place(x=1210, y=75)
-cus_flt["values"]=("All","Default")
+sql_cust_dt='SELECT DISTINCT category from customer'
+fbcursor.execute(sql_cust_dt)
+catgry=fbcursor.fetchall()  
+cus_flt["values"]=catgry
 cus_flt.bind('<<ComboboxSelected>>', cus_dft)
 cus_flt.current(0)
-
-
-
-
-# cus_s=ttk.Style()
-# cus_s.configure('Treeview.Heading',background='white')
-# cus_tree=ttk.Treeview(tab7,selectmode='browse')
-# cus_tree.place(x=0,y=353,height=20)
-
-# cus_tree["columns"]=("1","2","3","4","5","6","7","8")
-# cus_tree["show"]='headings'
-# cus_tree.column("1",width=30,anchor='c')
-# cus_tree.column("2",width=140,anchor='c')
-# cus_tree.column("3",width=190,anchor='c')
-# cus_tree.column("4",width=176,anchor='c')
-# cus_tree.column("5",width=176,anchor='c')
-# cus_tree.column("6",width=120,anchor='c')
-# cus_tree.column("7",width=130,anchor='c')
-# cus_tree.column("8",width=120,anchor='c')
-# cus_tree.heading("1",text="")
-# cus_tree.heading("2",text="Customer(S)")
-# cus_tree.heading("3",text="")
-# cus_tree.heading("4",text="")
-# cus_tree.heading("5",text="")
-# cus_tree.heading("6",text="")
-# cus_tree.heading("7",text="")
-# cus_tree.heading("8",text="")
-
 
 #***************************************************************************************Functions
 #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$((Top Button Functions))
@@ -388,10 +365,21 @@ def cus_empsfile_image(event):
               cus_psimage.photo = image
               cus_psimage.pack()
 def cus_file(event):
-      win32api.ShellExecute(0,"",cus_filenamez,None,".",0)
+      try:
+        all_items = cus_htcodeframe.get(0, tk.END) # tuple with text of all items in Listbox
+        sel_idx = cus_htcodeframe.curselection() # tuple with indexes of selected items
+        sel_list = [all_items[item] for item in sel_idx]
+        
+        if sel_list[0]=='CInvoice.pdf':
+          win32api.ShellExecute(0,"",cus_filenamezrrr,None,".",0)
+        else:
+          win32api.ShellExecute(0,"",cus_filenamez,None,".",0)
+      except:
+        pass
 def cus_UploadAction(event=None):
         global cus_filenamez
         cus_filenamez = askopenfilename(filetypes=(('PDF', '*.pdf',),("png file ",'.png'),("jpg file", ".jpg"),  ("All files", "*.*"),))
+        
         shutil.copyfile(cus_filenamez, os.getcwd()+'/images/'+cus_filenamez.split('/')[-1])
         cus_htcodeframe.insert(0, cus_filenamez.split('/')[-1]) 
 def cus_addemail_order():
@@ -715,9 +703,260 @@ def cus_addemail_order():
           
           cus_attachlbframe=LabelFrame(cus_email_Frame,text="Attachment(s)", height=350, width=280)
           cus_attachlbframe.place(x=740, y=5)
+          ##########################################################print()
+          from reportlab.pdfgen import canvas
+          # from tkdocviewer import *
+          from reportlab.lib import colors
+          from reportlab.pdfbase.ttfonts import TTFont
+          from reportlab.pdfbase import pdfmetrics
+          from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+          from reportlab.lib.pagesizes import letter, inch
+          try:
+              pdf = canvas.Canvas("customer_Reports/CInvoice.pdf", pagesize=letter)
+              cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+              sqlt= 'select * from customer where businessname=%s'
+              sqlt_val=(cus_id,)
+              fbcursor.execute(sqlt,sqlt_val)
+              cus_ft=fbcursor.fetchone()
+
+              sql_company = "SELECT * from company"
+              fbcursor.execute(sql_company)
+              company= fbcursor.fetchone()
+              
+              pdf.setFont('Helvetica',12)
+              pdf.drawString(27,768, company[1])
+              text=company[2]
+              wraped_text="\n".join(wrap(text,30))
+              htg=wraped_text.split('\n')
+                  
+              vg=len(htg)
+              if vg>0:
+                      pdf.drawString(30,752,htg[0])
+                      print("1")
+                      if vg>1:
+                        pdf.drawString(30,738,htg[1])
+                        print("2")
+                        if vg>2:
+                            pdf.drawString(30,725,htg[2])
+                            print("3")
+                            if vg>3:
+                                pdf.drawString(30,712,htg[3])
+                                print("4")
+                            else:
+                                pass
+                        else:
+                            pass
+                      else:
+                          pass
+                      
+              else:
+                      pass
+              pdf.drawString(35,700, "Sales tax reg No:"+company[4])
+              pdf.drawString(490,760, "Invoice Report")
+
+              pdf.drawString(460,700,"Customer ID:"+str(cus_ft[0]))
+              pdf.drawString(28,695,"__________________________________________________________________________________")
+              pdf.drawString(31,680,"Bill To:")
+              pdf.drawString(31,668,cus_ft[4])
+              text=cus_ft[5]
+              wraped_text="\n".join(wrap(text,30))
+              htg=wraped_text.split('\n')
+                  
+              vg=len(htg)
+              if vg>0:
+                      pdf.drawString(30,654,htg[0])
+                      print("1")
+                      if vg>1:
+                        pdf.drawString(30,640,htg[1])
+                        print("2")
+                        if vg>2:
+                            pdf.drawString(30,626,htg[2])
+                            print("3")
+                            if vg>3:
+                                pdf.drawString(30,612,htg[3])
+                                print("4")
+                            else:
+                                pass
+                        else:
+                            pass
+                      else:
+                          pass
+                      
+              else:
+                      pass
+
+              pdf.drawString(400,680,"Ship To:")
+              pdf.drawString(400,668,cus_ft[6])
+              text=cus_ft[7]
+              wraped_text="\n".join(wrap(text,30))
+              htg=wraped_text.split('\n')
+                  
+              vg=len(htg)
+              if vg>0:
+                      pdf.drawString(400,654,htg[0])
+                      print("1")
+                      if vg>1:
+                        pdf.drawString(400,640,htg[1])
+                        print("2")
+                        if vg>2:
+                            pdf.drawString(400,626,htg[2])
+                            print("3")
+                            if vg>3:
+                                pdf.drawString(400,612,htg[3])
+                                print("4")
+                            else:
+                                pass
+                        else:
+                            pass
+                      else:
+                          pass
+                      
+              else:
+                      pass
+
+              pdf.drawString(28,606,"__________________________________________________________________________________")
+
+
+              pdf.drawString(28,591,"__________________________________________________________________________________")
+              pdf.drawString(28,591,"Invoice No           Date        Due Date     Recurring      Status        Invoice Total    Total Paid   Balance      ")
+              
+              
+              sqlr= 'select currencysign from company'
+              fbcursor.execute(sqlr)
+              crncy=fbcursor.fetchone()
+                
+              crc=crncy[0]
+              sqlrt= 'select currsignplace from company'
+              fbcursor.execute(sqlrt)
+              post_rp=fbcursor.fetchone()
+              ps_cr=post_rp[0]
+              count=0
+              sql_inv_dt='SELECT * FROM invoice where businessname=%s'
+              inv_valuz=(cus_id,)
+              fbcursor.execute(sql_inv_dt,inv_valuz)
+              tre=fbcursor.fetchall()
+              x=571
+
+              for i in tre:
+                            if x==38 or x==50:
+                                pdf.showPage()
+                                x=750
+                            else:
+                                if i[24] is None:
+                                    dfh="No"
+                                else:
+                                    dfh="Yes"
+                                if ps_cr=="before amount":
+                                    pdf.drawString(28,x,str(i[1]))
+                              
+                                    pdf.drawString(100,x,str(i[2]))
+                                    pdf.drawString(168,x,str(i[3]))
+                                    pdf.drawString(250,x,dfh)
+                                    pdf.drawString(315,x,str(i[5])) 
+                                    pdf.drawString(380,x,str(crc)+str(i[8]))
+                                    pdf.drawString(460,x,str(crc)+str(i[9]))
+                                    pdf.drawString(522,x,str(crc)+str(i[10]))
+                                    
+                                elif ps_cr=="after amount":
+                                    pdf.drawString(28,x,str(i[1]))
+                                    pdf.drawString(100,x,str(i[2]))
+                                    pdf.drawString(168,x,str(i[3]))
+                                    pdf.drawString(250,x,str(dfh))
+                                    pdf.drawString(315,x,str(i[5])) 
+                                    pdf.drawString(380,x,str(i[8])+str(crc))
+                                    pdf.drawString(460,x,str(i[9])+str(crc))
+                                    pdf.drawString(522,x,str(i[10])+str(crc))
+                                    
+                                elif ps_cr=="before amount with space":
+                                    pdf.drawString(28,x,str(i[1]))
+                              
+                                    pdf.drawString(100,x,str(i[2]))
+                                    pdf.drawString(168,x,str(i[3]))
+                                    pdf.drawString(250,x,str(dfh))
+                                    pdf.drawString(315,x,str(i[5])) 
+                                    pdf.drawString(380,x,str(crc)+" "+str(i[8]))
+                                    pdf.drawString(460,x,str(crc)+" "+str(i[9]))
+                                    pdf.drawString(522,x,str(crc)+" "+str(i[10]))
+                                    
+                                    
+                                elif ps_cr=="after amount with space":
+                                    pdf.drawString(28,x,str(i[1]))
+                                    pdf.drawString(100,x,str(i[2]))
+                                    pdf.drawString(168,x,str(i[3]))
+                                    pdf.drawString(250,x,str(dfh))
+                                    pdf.drawString(315,x,str(i[5])) 
+                                    pdf.drawString(380,x,str(i[8])+" "+str(crc))
+                                    pdf.drawString(460,x,str(i[9])+" "+str(crc))
+                                    pdf.drawString(522,x,str(i[10])+" "+str(crc))
+                                
+                                else:
+                                    pass
+                              
+                            count += 1
+                          
+                            x-=15
+              sql_inv_t="select sum(invoicetot),sum(totpaid), sum(balance) from invoice where businessname=%s"
+              sql_inv_t_val=(cus_id,)
+              fbcursor.execute(sql_inv_t,sql_inv_t_val)
+              inv_ttt=fbcursor.fetchone() 
+              pdf.drawString(28,x,"__________________________________________________________________________________")
+              if ps_cr=="before amount":
+                                    
+                                    pdf.drawString(28,x-13,"")
+                              
+                                    pdf.drawString(100,x-13,"")
+                                    pdf.drawString(168,x-13,"")
+                                    pdf.drawString(250,x-13,"-Summary-")
+                                    pdf.drawString(315,x-13,"") 
+                                    pdf.drawString(380,x-13,str(crc)+str(inv_ttt[0]))
+                                    pdf.drawString(460,x-13,str(crc)+str(inv_ttt[1]))
+                                    pdf.drawString(522,x-13,str(crc)+str(inv_ttt[2]))
+              elif ps_cr=="after amount":
+                                  
+                                    pdf.drawString(28,x-13,"")
+                                    pdf.drawString(100,x-13,"")
+                                    pdf.drawString(168,x-13,"-Summary-")
+                                    pdf.drawString(250,x-13,"")
+                                    pdf.drawString(315,x-13,"") 
+                                    pdf.drawString(380,x-13,str(inv_ttt[0])+str(crc))
+                                    pdf.drawString(460,x-13,str(inv_ttt[1])+str(crc))
+                                    pdf.drawString(522,x-13,str(inv_ttt[2])+str(crc))
+              elif ps_cr=="before amount with space":
+                                    pdf.drawString(28,x-13,"")
+                              
+                                    pdf.drawString(100,x-13,"")
+                                    pdf.drawString(168,x-13,"-Summary-")
+                                    pdf.drawString(250,x-13,"")
+                                    pdf.drawString(315,x-13,"") 
+                                    pdf.drawString(380,x-13,str(crc)+" "+str(inv_ttt[0]))
+                                    pdf.drawString(460,x-13,str(crc)+" "+str(inv_ttt[1]))
+                                    pdf.drawString(522,x-13,str(crc)+" "+str(inv_ttt[2]))
+              elif ps_cr=="after amount with space":
+                                    pdf.drawString(28,x-13,"")
+                                    pdf.drawString(100,x-13,"")
+                                    pdf.drawString(168,x-13,"-Summary-")
+                                    pdf.drawString(250,x-13,"")
+                                    pdf.drawString(315,x-13,"") 
+                                    pdf.drawString(380,x-13,str(inv_ttt[0])+" "+str(crc))
+                                    pdf.drawString(460,x-13,str(inv_ttt[1])+" "+str(crc))
+                                    pdf.drawString(522,x-13,str(inv_ttt[2])+" "+str(crc))
+              else:
+                              pass
+
+
+              pdf.save()
+              # win32api.ShellExecute(0,"","customer_Reports\Recurring_Invoice_Report.pdf",None,".",0)
+          except:
+            pass
 
           cus_lstfrm=StringVar()  
           cus_htcodeframe=Listbox(cus_attachlbframe, height=13, width=43,listvariable=cus_lstfrm, bg="white")
+          global cus_filenamezrrr
+          cus_filenamezrrr ="customer_Reports\CInvoice.pdf"
+          wraped_text="/".join(wrap(cus_filenamezrrr,17))
+          hrt=wraped_text.split('/')
+          cus_htcodeframe.insert(0,hrt[1])
+
           cus_htcodeframe.place(x=5, y=5)
           cus_htcodeframe.bind('<Double-Button-1>' , cus_file)
 
@@ -825,7 +1064,10 @@ def cus_add_customer():
   b1sd=Entry(Labelframe1)
   cus_catg=StringVar() 
   b2=ttk.Combobox(Labelframe1,textvariable = cus_catg)    
-  b2['values'] = ('Default')  
+  sql_cust_dt='SELECT DISTINCT category from customer'
+  fbcursor.execute(sql_cust_dt)
+  catgry=fbcursor.fetchall()
+  b2['values'] = catgry 
   b2.place(x=390,y=220) 
   b2.current(0)
   a1.place(x=10,y=7)
@@ -1165,52 +1407,475 @@ def cus_add_customer():
   add_customer.mainloop()
 #-----------------------------------------------------------------------------------Edit Customer
 def cus_edit_customer():
-  cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
-  print(cus_id)
-  cus_ed_tbles="select * from customer where customerno=%s"
-  cus_ed_tbles_valuz=(cus_id,)
-  fbcursor.execute(cus_ed_tbles,cus_ed_tbles_valuz)
-  cus_ins_val=fbcursor.fetchone()
+  try:
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
+    print(cus_id)
+    cus_ed_tbles="select * from customer where customerno=%s"
+    cus_ed_tbles_valuz=(cus_id,)
+    fbcursor.execute(cus_ed_tbles,cus_ed_tbles_valuz)
+    cus_ins_val=fbcursor.fetchone()
 
-  def cancel_edt():
-    edit_customer.destroy()
+    def cancel_edt():
+      edit_customer.destroy()
 
-  def cus_edit_cst():
-   
-    cst_id=b1s.get()#id
-    cus_bs_nm=bnm_cus.get()#bs name
-    # cmp_id=
-    cus_bs_ad_cus=bs_adr_cus.get()#bs ad name
-    cus_bs_cnt=bs_cnt.get()#Contact person
-    cus_bs_em=bs_em.get()#email bs
-    cus_bs_tel=bs_tel.get()#bs tel
-    cus_bs_fax=bs_fax.get()#bs fax
-    cus_bs_mob=bs_mobi.get()#bs mob
-    cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
-    cus_bs_spc_tax=cus_sp_tx.get()# specific tax
-    cus_bs_spc_tax2=cus_sp_tx2.get()
-    cus_bs_dis=cus_sp_disc.get()# discount
-    cus_bs_ctr=bs_cus_ct.get()# customer category
+    def cus_edit_cst():
+    
+      cst_id=b1s.get()#id
+      cus_bs_nm=bnm_cus.get()#bs name
+      # cmp_id=
+      cus_bs_ad_cus=bs_adr_cus.get()#bs ad name
+      cus_bs_cnt=bs_cnt.get()#Contact person
+      cus_bs_em=bs_em.get()#email bs
+      cus_bs_tel=bs_tel.get()#bs tel
+      cus_bs_fax=bs_fax.get()#bs fax
+      cus_bs_mob=bs_mobi.get()#bs mob
+      cus_bs_pymcheck=cus_ds_chk.get()# discount checkboc
+      cus_bs_spc_tax=cus_sp_tx.get()# specific tax
+      cus_bs_spc_tax2=cus_sp_tx2.get()
+      cus_bs_dis=cus_sp_disc.get()# discount
+      cus_bs_ctr=bs_cus_ct.get()# customer category
 
-    # ship 
-    cus_shp_cat=cus_catg.get()# category
-    cus_shp_st=cus_st.get()# status Checkbox
-    cus_shp_cnt_pr=cus_sh_nam.get()#contact person
-    cus_shp_adr=cus_sh_adr.get()#contact address
-    cus_shp_cnt=bs_sh_cnt.get()#Contact person
-    cus_shp_em=bs_sh_em.get()#email bs
-    cus_shp_tel=bs_sh_tel.get()#bs tel
-    cus_shp_fax=bs_sh_fax.get()#bs fax
-    cus_shp_cntry=cus_sh_coun.get()#contry
-    cus_shp_city=cus_sh_cty.get()#city
-    cus_shp_ntre=cfgd.get("1.0", END)
-    print(cus_shp_ntre)
+      # ship 
+      cus_shp_cat=cus_catg.get()# category
+      cus_shp_st=cus_st.get()# status Checkbox
+      cus_shp_cnt_pr=cus_sh_nam.get()#contact person
+      cus_shp_adr=cus_sh_adr.get()#contact address
+      cus_shp_cnt=bs_sh_cnt.get()#Contact person
+      cus_shp_em=bs_sh_em.get()#email bs
+      cus_shp_tel=bs_sh_tel.get()#bs tel
+      cus_shp_fax=bs_sh_fax.get()#bs fax
+      cus_shp_cntry=cus_sh_coun.get()#contry
+      cus_shp_city=cus_sh_cty.get()#city
+      cus_shp_ntre=cfgd.get("1.0", END)
+      print(cus_shp_ntre)
 
-    cus_tbl_edit="update customer set customerno=%s,category=%s,status=%s,businessname=%s,businessaddress=%s,shipname=%s,shipaddress=%s,contactperson=%s,cpemail=%s,cptelno=%s,cpfax=%s,cpmobileforsms=%s,shipcontactperson=%s,shipcpemail=%s,shipcptelno=%s,shipcpfax=%s,taxexempt=%s,specifictax1=%s,discount=%s,country=%s,city=%s,customertype=%s,notes=%s, specifictax2=%s where customerno = %s" #adding values into db
-    cus_tbl_edit_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_ntre,cus_bs_spc_tax2,cus_id,)
-    fbcursor.execute(cus_tbl_edit,cus_tbl_edit_val)
+      cus_tbl_edit="update customer set customerno=%s,category=%s,status=%s,businessname=%s,businessaddress=%s,shipname=%s,shipaddress=%s,contactperson=%s,cpemail=%s,cptelno=%s,cpfax=%s,cpmobileforsms=%s,shipcontactperson=%s,shipcpemail=%s,shipcptelno=%s,shipcpfax=%s,taxexempt=%s,specifictax1=%s,discount=%s,country=%s,city=%s,customertype=%s,notes=%s, specifictax2=%s where customerno = %s" #adding values into db
+      cus_tbl_edit_val=(cst_id,cus_shp_cat,cus_shp_st,cus_bs_nm,cus_bs_ad_cus,cus_shp_cnt_pr,cus_shp_adr,cus_bs_cnt,cus_bs_em,cus_bs_tel,cus_bs_fax,cus_bs_mob,cus_shp_cnt,cus_shp_em,cus_shp_tel,cus_shp_fax,cus_bs_pymcheck,cus_bs_spc_tax,cus_bs_dis,cus_shp_cntry,cus_shp_city,cus_bs_ctr,cus_shp_ntre,cus_bs_spc_tax2,cus_id,)
+      fbcursor.execute(cus_tbl_edit,cus_tbl_edit_val)
+      fbilldb.commit()
+      cus_main_s=ttk.Style()
+      for record in cus_main_tree.get_children():
+        cus_main_tree.delete(record)
+      cus_main_table_sql="select * from customer"
+      fbcursor.execute(cus_main_table_sql)
+      main_tb_val=fbcursor.fetchall()
+      count_cus=0
+
+      for i in main_tb_val:
+        cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
+        count_cus +=1
+      edit_customer.destroy()
+
+    edit_customer = Toplevel()  
+    edit_customer.title("Add new Customer ")
+    p2 = PhotoImage(file = "images/fbicon.png")
+    edit_customer.iconphoto(False, p2)
+    edit_customer.geometry("775x580+300+100")
+    Labelframe1=LabelFrame(edit_customer,text="Customer")
+    Labelframe1.place(x=10,y=10,width=755,height=525)
+    a1=Label(Labelframe1,text="Customer ID:",fg="Blue")
+    a2=Label(Labelframe1,text="Category:")
+    a3=Label(Labelframe1,text="Status :")
+    a3.place(x=620,y=7)
+  
+    b1s=Entry(Labelframe1)
+    print(cus_ins_val[24])
+    b1s.insert(0,cus_ins_val[24])
+    cus_catg=StringVar() 
+    b2=ttk.Combobox(Labelframe1,textvariable = cus_catg) 
+    sql_cust_dt='SELECT DISTINCT category from customer'
+    fbcursor.execute(sql_cust_dt)
+    catgry=fbcursor.fetchall()    
+    b2['values'] = catgry  
+    b2.place(x=390,y=220) 
+    b2.current(cus_ins_val[3])
+    a1.place(x=10,y=7)
+    a2.place(x=330,y=7)   
+    b1s.place(x=120,y=7,width=200)
+    b2.place(x=390,y=7,width=220)
+    cus_st = IntVar()
+    chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = cus_st, onvalue = 1, offvalue = 0)
+    if cus_ins_val[3]==0:
+      chkbtn1.deselect()
+    else:
+      chkbtn1.select()
+    chkbtn1.place(x=670,y=6)
+
+    Labelframe2=LabelFrame(Labelframe1,text="Invoice to (appears on invoice)")
+    Labelframe2.place(x=10,y=35,width=340,height=125)
+    a1=Label(Labelframe2,text="Business Name:",fg="Blue").place(x=10,y=10)
+    a2=Label(Labelframe2,text="Address:",fg="Blue").place(x=10,y=35)
+    bnm_cus=StringVar()
+    bs_adr_cus=StringVar()
+    b1=Entry(Labelframe2, textvariable=bnm_cus)
+    b1.insert(0,cus_ins_val[4])
+    b1.place(x=110,y=10,width=210)
+    b2=Entry(Labelframe2, textvariable=bs_adr_cus) 
+    
+    b2.insert(0,cus_ins_val[5])
+    b2.place(x=110,y=35,width=210,height=63) 
+    # b1.place(x=359,y=85,height=20)
+    btn110=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>")
+
+
+    Labelframe3=LabelFrame(Labelframe1,text="Ship to (appears on invoice)")
+    Labelframe3.place(x=400,y=35,width=340,height=125)
+    a11=Label(Labelframe3,text="Ship to Name:").place(x=10,y=10)
+    a21=Label(Labelframe3,text="Address:").place(x=10,y=35)
+    cus_sh_nam=StringVar()
+    cus_sh_adr=StringVar()
+    b11=Entry(Labelframe3, textvariable=cus_sh_nam)
+    b11.insert(0,cus_ins_val[6])
+    b11.place(x=110,y=10,width=210)
+    b21=Entry(Labelframe3, textvariable=cus_sh_adr)
+    b21.delete(0,'end')
+    b21.insert(0,cus_ins_val[7])
+    b21.place(x=110,y=35,width=210,height=63)
+
+
+    Labelframe4=LabelFrame(Labelframe1,text="Contact")
+    Labelframe4.place(x=10,y=170,width=340,height=137)
+    a11=Label(Labelframe4,text="Contact Person:").place(x=10,y=10)
+    
+    a21=Label(Labelframe4,text="Email Address:",fg="Blue").place(x=10,y=35)
+    a31=Label(Labelframe4,text="Tel. No:").place(x=10,y=60)
+    a41=Label(Labelframe4,text="Fax:").place(x=200,y=60)
+    a51=Label(Labelframe4,text="Mobile number for SMS notification:").place(x=10,y=85)
+    bs_cnt=StringVar()
+    bs_em=StringVar()
+    bs_tel=StringVar()
+    bs_fax=StringVar()
+    bs_mobi=StringVar()
+    b11=Entry(Labelframe4, textvariable=bs_cnt)
+    b11.insert(0,cus_ins_val[8])
+    b11.place(x=110,y=10,width=210)
+    
+    b21=Entry(Labelframe4,textvariable=bs_em)
+    def validate(value):
+          
+          """
+          Validat the email entry
+          :param value:
+          :return:
+          """
+          pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+          if re.fullmatch(pattern, value) is None:
+              
+              return False
+          b21.config(fg="black")
+          return True
+
+    def on_invalid():
+          b21.config(fg="red")
+          
+    vcmd = (Labelframe2.register(validate), '%P')
+    ivcmd = (Labelframe2.register(on_invalid),)
+
+    
+    
+    b21.insert(0,cus_ins_val[9])
+    b21.config(validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
+    b21.place(x=110,y=35,width=210)
+    def validate_tel(value):
+          
+          """
+          Validat the email entry
+          :param value:
+          :return:
+          """
+          pattern = r'^[0-9]\d{9}$'
+          if re.fullmatch(pattern, value) is None:
+              return False
+              
+          b31.config(fg="black")
+          return True
+
+    def on_invalid_tel():
+        b31.config(fg="red")
+    
+        
+    v_tel_cmd = (Labelframe2.register(validate_tel), '%P')
+    iv_tel_cmd = (Labelframe2.register(on_invalid_tel),)
+
+    b31=Entry(Labelframe4,textvariable=bs_tel)
+    b31.config(validate='focusout', validatecommand=v_tel_cmd, invalidcommand=iv_tel_cmd)
+    b31.insert(0,cus_ins_val[10])
+
+    b31.place(x=110,y=60,width=90)
+    b4126=Entry(Labelframe4,textvariable=bs_fax)
+    def validate_telb4126(value):
+          
+          """
+          Validat the email entry
+          :param value:
+          :return:
+          """
+          pattern = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
+          if re.fullmatch(pattern, value) is None:
+              
+              return False
+          b4126.config(fg="black")
+          return True
+
+    def on_invalid_telb4126():
+          b4126.config(fg="red")
+          
+    v_tel_cmdb4126 = (Labelframe2.register(validate_telb4126), '%P')
+    iv_tel_cmdb4126 = (Labelframe2.register(on_invalid_telb4126),)
+    b4126.config(validate='focusout', validatecommand=v_tel_cmdb4126, invalidcommand=iv_tel_cmdb4126)
+    b4126.insert(0,cus_ins_val[11])
+    b4126.place(x=230,y=60,width=90)
+
+    b51=Entry(Labelframe4,textvariable=bs_mobi)
+    def validate_tel3(value):
+          
+          """
+          Validat the email entry
+          :param value:
+          :return:
+          """
+          pattern = r'^[0-9]\d{9}$'
+          if re.fullmatch(pattern, value) is None:
+              return False
+              
+          b51.config(fg="black")
+          return True
+
+    def on_invalid_tel3():
+        b51.config(fg="red")
+    
+        
+    v_tel_cmd3 = (Labelframe2.register(validate_tel3), '%P')
+    iv_tel_cmd3 = (Labelframe2.register(on_invalid_tel3),)
+
+    b51.config(validate='focusout', validatecommand=v_tel_cmd3, invalidcommand=iv_tel_cmd3)
+    b51.insert(0,cus_ins_val[12])
+    b51.place(x=215,y=85,width=105)
+    btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
+
+    bs_sh_cnt=StringVar()
+    bs_sh_em=StringVar()
+    bs_sh_tel=StringVar()
+    bs_sh_fax=StringVar()
+
+    Labelframe5=LabelFrame(Labelframe1,text="Ship To Contact")
+    Labelframe5.place(x=400,y=170,width=340,height=108)
+    a11=Label(Labelframe5,text="Contact Person:").place(x=10,y=10)
+    a21=Label(Labelframe5,text="Email Address:").place(x=10,y=35)
+    a31=Label(Labelframe5,text="Tel. No:").place(x=10,y=60)
+    a41=Label(Labelframe5,text="Fax:").place(x=200,y=60)
+
+    b11=Entry(Labelframe5, textvariable=bs_sh_cnt)
+    b11.insert(0,cus_ins_val[13])
+    b11.place(x=110,y=10,width=210)
+    b211=Entry(Labelframe5,textvariable=bs_sh_em)
+    
+
+    def validateb21(value):
+          
+          """
+          Validat the email entry
+          :param value:
+          :return:
+          """
+          pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+          if re.fullmatch(pattern, value) is None:
+              
+              return False
+
+        
+          b211.config(fg="black")
+          return True
+
+    def on_invalidb21():
+          b211.config(fg="red")
+          
+    vcmdb21 = (Labelframe2.register(validateb21), '%P')
+    ivcmdb21 = (Labelframe2.register(on_invalidb21),)
+    
+    b211.config(validate='focusout', validatecommand=vcmdb21, invalidcommand=ivcmdb21)
+    b211.insert(0,cus_ins_val[14])
+    b211.place(x=110,y=35,width=210)
+    b311=Entry(Labelframe5,textvariable=bs_sh_tel)
+    def validate_telb311(value):
+          
+          """
+          Validat the email entry
+          :param value:
+          :return:
+          """
+          pattern = r'^[0-9]\d{9}$'
+          if re.fullmatch(pattern, value) is None:
+              return False
+              
+          b311.config(fg="black")
+          return True
+
+    def on_invalid_telb311():
+        b311.config(fg="red")
+    v_tel_cmdb311 = (Labelframe2.register(validate_telb311), '%P')
+    iv_tel_cmdb311 = (Labelframe2.register(on_invalid_telb311),)
+
+    b311.insert(0,cus_ins_val[15])
+    b311.config(validate='focusout', validatecommand=v_tel_cmdb311, invalidcommand=iv_tel_cmdb311)
+    b311.place(x=110,y=60,width=90)
+
+    b414=Entry(Labelframe5,textvariable=bs_sh_fax)
+    def validate_telb414(value):
+          
+          """
+          Validat the email entry
+          :param value:
+          :return:
+          """
+          pattern = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
+          if re.fullmatch(pattern, value) is None:
+              
+              return False
+          b414.config(fg="black")
+          return True
+
+    def on_invalid_telb414():
+          b414.config(fg="red")
+          
+    v_tel_cmdb414 = (Labelframe2.register(validate_telb414), '%P')
+    iv_tel_cmdb414 = (Labelframe2.register(on_invalid_telb414),)
+    b414.config(validate='focusout', validatecommand=v_tel_cmdb414, invalidcommand=iv_tel_cmdb414)
+
+    b414.insert(0,cus_ins_val[16])
+    b414.place(x=230,y=60,width=90)
+
+
+    Labelframe6=LabelFrame(Labelframe1,text="Payment Option")
+    Labelframe6.place(x=10,y=317,width=340,height=80)
+    cus_ds_chk = StringVar()
+    cus_sp_tx=IntVar()
+    cus_sp_tx2=IntVar()
+    cus_sp_disc=IntVar()
+    chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = cus_ds_chk, onvalue = 1, offvalue = 0, font=("arial", 8))
+    if cus_ins_val[17]==0:
+      chkbtn1.select()
+    elif cus_ins_val[17]==0:
+      chkbtn1.deselect()
+    chkbtn1.place(x=10,y=6)
+
+    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+    a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
+    cus_sp_disc = IntVar(Labelframe6)
+
+    cus_sp_disc=Entry(Labelframe6)
+    def tax_frt(S,d):
+        if d=='1':
+          if not S in ['.','0','1','2','3','4','5','6','7','8','9']:
+            return False
+          return True
+          
+        if d.isdigit():
+          return True
+
+
+    edt_lty=(Labelframe6.register(tax_frt), '%S','%d')
+      # edt_ltyr=(Labelframe6.register(tax_frtinv),)
+
+
+    cus_sp_disc.insert(0,cus_ins_val[19])
+    cus_sp_disc.config(validate='key',validatecommand=(edt_lty))
+    cus_sp_disc.place(x=80,y=30,width=70)
+
+    swt='select taxtype from company'
+    fbcursor.execute(swt)
+    fdt=fbcursor.fetchone()
+    print(fdt[0])
+    if fdt[0]=='2':
+      a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+      cus_sp_tx=Entry(Labelframe6)
+      cus_sp_tx.insert(0,cus_ins_val[18])
+      cus_sp_tx.config(validate='key',validatecommand=(edt_lty))
+      cus_sp_tx.place(x=250,y=7,width=70)
+      cus_sp_tx2=Entry(Labelframe6)
+      cus_sp_tx2.insert(0,cus_ins_val[25])
+      cus_sp_tx2.config(validate='key',validatecommand=(edt_lty))
+      cus_sp_tx2.place(x=250,y=30,width=70)
+      
+      a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
+    elif fdt[0]=='1':
+      a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
+      cus_sp_tx=Entry(Labelframe6)
+      cus_sp_tx.insert(0,cus_ins_val[18])
+      cus_sp_tx.config(validate='key',validatecommand=(edt_lty))
+      cus_sp_tx.place(x=250,y=7,width=70)
+    elif fdt[0]=='0':
+      pass
+
+    Labelframe7=LabelFrame(Labelframe1,text="Customer type")
+    Labelframe7.place(x=10,y=405,width=340,height=90)
+    bs_cus_ct=StringVar()
+    r1=Radiobutton(Labelframe7, text = "Client", variable = bs_cus_ct, value ="Client")
+    r2=Radiobutton(Labelframe7, text = "Vender", variable = bs_cus_ct, value = "Vender")
+    r3=Radiobutton(Labelframe7, text = "Both(Client/Vender)", variable = bs_cus_ct, value = "Both(Client/Vender)")
+    if cus_ins_val[22]=="Client":
+      r1.select()
+      r2.deselect()
+      r3.deselect()
+    elif cus_ins_val[22]=="Vender":
+      r1.deselect()
+      r2.select()
+      r3.deselect()
+    else:
+      r1.deselect()
+      r2.deselect()
+      r3.select()
+    r1.place(x=5,y=15)
+    r2.place(x=90,y=15)
+    r3.place(x=180,y=15)
+
+    Labelframe8=LabelFrame(Labelframe1,text="Additional Info")
+    Labelframe8.place(x=400,y=288,width=340,height=80)
+    a11=Label(Labelframe8,text="Country:").place(x=10,y=5)
+    a12=Label(Labelframe8,text="City:").place(x=10,y=30)
+    cus_sh_coun=StringVar() 
+    cus_sh_cty=StringVar() 
+
+    b11=ttk.Combobox(Labelframe8,textvariable=cus_sh_coun)
+    b11.place(x=110,y=5,width=210)
+    b11['values'] = ('India','America')  
+    b11.insert(0,cus_ins_val[20])  
+    b11.place(x=110,y=5) 
+    b12=Entry(Labelframe8,textvariable=cus_sh_cty)
+    b12.insert(0,cus_ins_val[21])  
+    b12.place(x=110,y=30,width=210)
+    Labelframe9=LabelFrame(Labelframe1,text="Notes")
+    Labelframe9.place(x=400,y=380,width=340,height=115)
+    '''scrollbar = Scrollbar(Labelframe9)
+          scrollbar.place(x=300,y=10)
+          b12=Entry(Labelframe9,yscrollcommand=scrollbar.set).place(x=10,y=10,width=290,height=70)
+          yscrollcommand.config(command=b12.yview)'''
+    cus_nt=StringVar()
+    global cfgd
+    cfgd=scrolledtext.ScrolledText(Labelframe9)
+    cfgd.insert(1.0,cus_ins_val[23])
+    cfgd.place(x=20,y=10,width=295,height=70)
+    # scrollbar_cus_nt = Scrollbar(Labelframe9)
+    # scrollbar_cus_nt.place(x=295,y=10)
+
+    btn1=Button(edit_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_edit_cst(),text="  OK").place(x=20, y=545)
+    btn2=Button(edit_customer,width=80,compound = LEFT,image=cancel,text="  Cancel", command=cancel_edt).place(x=665, y=545)
+    edit_customer.mainloop()
+  except:
+    pass
+#-----------------------------------------------------------------------------------Delete Customer
+def cus_delete_customer():
+  try:
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
+    print(cus_id)
+    
+    messagebox.askyesno("Delete Customers", "Are you sure want to delete 1 Customer(s) ?")
+    sql_qr="DELETE FROM customer WHERE customerno=%s"
+    sql_qr_val=(cus_id,)
+    fbcursor.execute(sql_qr,sql_qr_val)
     fbilldb.commit()
-    cus_main_s=ttk.Style()
+    cus_main_tree.selection_set(1)
+
     for record in cus_main_tree.get_children():
       cus_main_tree.delete(record)
     cus_main_table_sql="select * from customer"
@@ -1221,423 +1886,8 @@ def cus_edit_customer():
     for i in main_tb_val:
       cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
       count_cus +=1
-    edit_customer.destroy()
-
-  edit_customer = Toplevel()  
-  edit_customer.title("Add new Customer ")
-  p2 = PhotoImage(file = "images/fbicon.png")
-  edit_customer.iconphoto(False, p2)
-  edit_customer.geometry("775x580+300+100")
-  Labelframe1=LabelFrame(edit_customer,text="Customer")
-  Labelframe1.place(x=10,y=10,width=755,height=525)
-  a1=Label(Labelframe1,text="Customer ID:",fg="Blue")
-  a2=Label(Labelframe1,text="Category:")
-  a3=Label(Labelframe1,text="Status :")
-  a3.place(x=620,y=7)
- 
-  b1s=Entry(Labelframe1)
-  print(cus_ins_val[24])
-  b1s.insert(0,cus_ins_val[24])
-  cus_catg=StringVar() 
-  b2=ttk.Combobox(Labelframe1,textvariable = cus_catg)    
-  b2['values'] = ('Default')  
-  
-  b2.place(x=390,y=220) 
-  b2.current(0)
-  a1.place(x=10,y=7)
-  a2.place(x=330,y=7)   
-  b1s.place(x=120,y=7,width=200)
-  b2.place(x=390,y=7,width=220)
-  cus_st = IntVar()
-  chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = cus_st, onvalue = 1, offvalue = 0)
-  if cus_ins_val[3]==0:
-    chkbtn1.deselect()
-  else:
-    chkbtn1.select()
-  chkbtn1.place(x=670,y=6)
-
-  Labelframe2=LabelFrame(Labelframe1,text="Invoice to (appears on invoice)")
-  Labelframe2.place(x=10,y=35,width=340,height=125)
-  a1=Label(Labelframe2,text="Business Name:",fg="Blue").place(x=10,y=10)
-  a2=Label(Labelframe2,text="Address:",fg="Blue").place(x=10,y=35)
-  bnm_cus=StringVar()
-  bs_adr_cus=StringVar()
-  b1=Entry(Labelframe2, textvariable=bnm_cus)
-  b1.insert(0,cus_ins_val[4])
-  b1.place(x=110,y=10,width=210)
-  b2=Entry(Labelframe2, textvariable=bs_adr_cus) 
-  
-  b2.insert(0,cus_ins_val[5])
-  b2.place(x=110,y=35,width=210,height=63) 
-  # b1.place(x=359,y=85,height=20)
-  btn110=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>")
-
-
-  Labelframe3=LabelFrame(Labelframe1,text="Ship to (appears on invoice)")
-  Labelframe3.place(x=400,y=35,width=340,height=125)
-  a11=Label(Labelframe3,text="Ship to Name:").place(x=10,y=10)
-  a21=Label(Labelframe3,text="Address:").place(x=10,y=35)
-  cus_sh_nam=StringVar()
-  cus_sh_adr=StringVar()
-  b11=Entry(Labelframe3, textvariable=cus_sh_nam)
-  b11.insert(0,cus_ins_val[6])
-  b11.place(x=110,y=10,width=210)
-  b21=Entry(Labelframe3, textvariable=cus_sh_adr)
-  b21.delete(0,'end')
-  b21.insert(0,cus_ins_val[7])
-  b21.place(x=110,y=35,width=210,height=63)
-
-
-  Labelframe4=LabelFrame(Labelframe1,text="Contact")
-  Labelframe4.place(x=10,y=170,width=340,height=137)
-  a11=Label(Labelframe4,text="Contact Person:").place(x=10,y=10)
-  
-  a21=Label(Labelframe4,text="Email Address:",fg="Blue").place(x=10,y=35)
-  a31=Label(Labelframe4,text="Tel. No:").place(x=10,y=60)
-  a41=Label(Labelframe4,text="Fax:").place(x=200,y=60)
-  a51=Label(Labelframe4,text="Mobile number for SMS notification:").place(x=10,y=85)
-  bs_cnt=StringVar()
-  bs_em=StringVar()
-  bs_tel=StringVar()
-  bs_fax=StringVar()
-  bs_mobi=StringVar()
-  b11=Entry(Labelframe4, textvariable=bs_cnt)
-  b11.insert(0,cus_ins_val[8])
-  b11.place(x=110,y=10,width=210)
-  
-  b21=Entry(Labelframe4,textvariable=bs_em)
-  def validate(value):
-        
-        """
-        Validat the email entry
-        :param value:
-        :return:
-        """
-        pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-        if re.fullmatch(pattern, value) is None:
-            
-            return False
-        b21.config(fg="black")
-        return True
-
-  def on_invalid():
-        b21.config(fg="red")
-        
-  vcmd = (Labelframe2.register(validate), '%P')
-  ivcmd = (Labelframe2.register(on_invalid),)
-
-  
-  
-  b21.insert(0,cus_ins_val[9])
-  b21.config(validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
-  b21.place(x=110,y=35,width=210)
-  def validate_tel(value):
-        
-        """
-        Validat the email entry
-        :param value:
-        :return:
-        """
-        pattern = r'^[0-9]\d{9}$'
-        if re.fullmatch(pattern, value) is None:
-            return False
-            
-        b31.config(fg="black")
-        return True
-
-  def on_invalid_tel():
-      b31.config(fg="red")
-  
-       
-  v_tel_cmd = (Labelframe2.register(validate_tel), '%P')
-  iv_tel_cmd = (Labelframe2.register(on_invalid_tel),)
-
-  b31=Entry(Labelframe4,textvariable=bs_tel)
-  b31.config(validate='focusout', validatecommand=v_tel_cmd, invalidcommand=iv_tel_cmd)
-  b31.insert(0,cus_ins_val[10])
-
-  b31.place(x=110,y=60,width=90)
-  b4126=Entry(Labelframe4,textvariable=bs_fax)
-  def validate_telb4126(value):
-        
-        """
-        Validat the email entry
-        :param value:
-        :return:
-        """
-        pattern = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
-        if re.fullmatch(pattern, value) is None:
-            
-            return False
-        b4126.config(fg="black")
-        return True
-
-  def on_invalid_telb4126():
-        b4126.config(fg="red")
-        
-  v_tel_cmdb4126 = (Labelframe2.register(validate_telb4126), '%P')
-  iv_tel_cmdb4126 = (Labelframe2.register(on_invalid_telb4126),)
-  b4126.config(validate='focusout', validatecommand=v_tel_cmdb4126, invalidcommand=iv_tel_cmdb4126)
-  b4126.insert(0,cus_ins_val[11])
-  b4126.place(x=230,y=60,width=90)
-
-  b51=Entry(Labelframe4,textvariable=bs_mobi)
-  def validate_tel3(value):
-        
-        """
-        Validat the email entry
-        :param value:
-        :return:
-        """
-        pattern = r'^[0-9]\d{9}$'
-        if re.fullmatch(pattern, value) is None:
-            return False
-            
-        b51.config(fg="black")
-        return True
-
-  def on_invalid_tel3():
-      b51.config(fg="red")
-  
-       
-  v_tel_cmd3 = (Labelframe2.register(validate_tel3), '%P')
-  iv_tel_cmd3 = (Labelframe2.register(on_invalid_tel3),)
-
-  b51.config(validate='focusout', validatecommand=v_tel_cmd3, invalidcommand=iv_tel_cmd3)
-  b51.insert(0,cus_ins_val[12])
-  b51.place(x=215,y=85,width=105)
-  btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
-
-  bs_sh_cnt=StringVar()
-  bs_sh_em=StringVar()
-  bs_sh_tel=StringVar()
-  bs_sh_fax=StringVar()
-
-  Labelframe5=LabelFrame(Labelframe1,text="Ship To Contact")
-  Labelframe5.place(x=400,y=170,width=340,height=108)
-  a11=Label(Labelframe5,text="Contact Person:").place(x=10,y=10)
-  a21=Label(Labelframe5,text="Email Address:").place(x=10,y=35)
-  a31=Label(Labelframe5,text="Tel. No:").place(x=10,y=60)
-  a41=Label(Labelframe5,text="Fax:").place(x=200,y=60)
-
-  b11=Entry(Labelframe5, textvariable=bs_sh_cnt)
-  b11.insert(0,cus_ins_val[13])
-  b11.place(x=110,y=10,width=210)
-  b211=Entry(Labelframe5,textvariable=bs_sh_em)
-  
-
-  def validateb21(value):
-        
-        """
-        Validat the email entry
-        :param value:
-        :return:
-        """
-        pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-        if re.fullmatch(pattern, value) is None:
-            
-            return False
-
-       
-        b211.config(fg="black")
-        return True
-
-  def on_invalidb21():
-        b211.config(fg="red")
-        
-  vcmdb21 = (Labelframe2.register(validateb21), '%P')
-  ivcmdb21 = (Labelframe2.register(on_invalidb21),)
-  
-  b211.config(validate='focusout', validatecommand=vcmdb21, invalidcommand=ivcmdb21)
-  b211.insert(0,cus_ins_val[14])
-  b211.place(x=110,y=35,width=210)
-  b311=Entry(Labelframe5,textvariable=bs_sh_tel)
-  def validate_telb311(value):
-        
-        """
-        Validat the email entry
-        :param value:
-        :return:
-        """
-        pattern = r'^[0-9]\d{9}$'
-        if re.fullmatch(pattern, value) is None:
-            return False
-            
-        b311.config(fg="black")
-        return True
-
-  def on_invalid_telb311():
-      b311.config(fg="red")
-  v_tel_cmdb311 = (Labelframe2.register(validate_telb311), '%P')
-  iv_tel_cmdb311 = (Labelframe2.register(on_invalid_telb311),)
-
-  b311.insert(0,cus_ins_val[15])
-  b311.config(validate='focusout', validatecommand=v_tel_cmdb311, invalidcommand=iv_tel_cmdb311)
-  b311.place(x=110,y=60,width=90)
-
-  b414=Entry(Labelframe5,textvariable=bs_sh_fax)
-  def validate_telb414(value):
-        
-        """
-        Validat the email entry
-        :param value:
-        :return:
-        """
-        pattern = r'^(\+\d{1,2}\s)?\(?\d{3}\)?[\s.-]\d{3}[\s.-]\d{4}$'
-        if re.fullmatch(pattern, value) is None:
-            
-            return False
-        b414.config(fg="black")
-        return True
-
-  def on_invalid_telb414():
-        b414.config(fg="red")
-        
-  v_tel_cmdb414 = (Labelframe2.register(validate_telb414), '%P')
-  iv_tel_cmdb414 = (Labelframe2.register(on_invalid_telb414),)
-  b414.config(validate='focusout', validatecommand=v_tel_cmdb414, invalidcommand=iv_tel_cmdb414)
-
-  b414.insert(0,cus_ins_val[16])
-  b414.place(x=230,y=60,width=90)
-
-
-  Labelframe6=LabelFrame(Labelframe1,text="Payment Option")
-  Labelframe6.place(x=10,y=317,width=340,height=80)
-  cus_ds_chk = StringVar()
-  cus_sp_tx=IntVar()
-  cus_sp_tx2=IntVar()
-  cus_sp_disc=IntVar()
-  chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = cus_ds_chk, onvalue = 1, offvalue = 0, font=("arial", 8))
-  if cus_ins_val[17]==0:
-    chkbtn1.select()
-  elif cus_ins_val[17]==0:
-    chkbtn1.deselect()
-  chkbtn1.place(x=10,y=6)
-
-  a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-  a12=Label(Labelframe6,text="Discount%:").place(x=10,y=30)
-  cus_sp_disc = IntVar(Labelframe6)
-
-  cus_sp_disc=Entry(Labelframe6)
-  def tax_frt(S,d):
-      if d=='1':
-        if not S in ['.','0','1','2','3','4','5','6','7','8','9']:
-          return False
-        return True
-        
-      if d.isdigit():
-        return True
-
-
-  edt_lty=(Labelframe6.register(tax_frt), '%S','%d')
-    # edt_ltyr=(Labelframe6.register(tax_frtinv),)
-
-
-  cus_sp_disc.insert(0,cus_ins_val[19])
-  cus_sp_disc.config(validate='key',validatecommand=(edt_lty))
-  cus_sp_disc.place(x=80,y=30,width=70)
-
-  swt='select taxtype from company'
-  fbcursor.execute(swt)
-  fdt=fbcursor.fetchone()
-  print(fdt[0])
-  if fdt[0]=='2':
-    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-    cus_sp_tx=Entry(Labelframe6)
-    cus_sp_tx.insert(0,cus_ins_val[18])
-    cus_sp_tx.config(validate='key',validatecommand=(edt_lty))
-    cus_sp_tx.place(x=250,y=7,width=70)
-    cus_sp_tx2=Entry(Labelframe6)
-    cus_sp_tx2.insert(0,cus_ins_val[25])
-    cus_sp_tx2.config(validate='key',validatecommand=(edt_lty))
-    cus_sp_tx2.place(x=250,y=30,width=70)
-    
-    a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
-  elif fdt[0]=='1':
-    a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-    cus_sp_tx=Entry(Labelframe6)
-    cus_sp_tx.insert(0,cus_ins_val[18])
-    cus_sp_tx.config(validate='key',validatecommand=(edt_lty))
-    cus_sp_tx.place(x=250,y=7,width=70)
-  elif fdt[0]=='0':
+  except:
     pass
-
-  Labelframe7=LabelFrame(Labelframe1,text="Customer type")
-  Labelframe7.place(x=10,y=405,width=340,height=90)
-  bs_cus_ct=StringVar()
-  r1=Radiobutton(Labelframe7, text = "Client", variable = bs_cus_ct, value ="Client")
-  r2=Radiobutton(Labelframe7, text = "Vender", variable = bs_cus_ct, value = "Vender")
-  r3=Radiobutton(Labelframe7, text = "Both(Client/Vender)", variable = bs_cus_ct, value = "Both(Client/Vender)")
-  if cus_ins_val[22]=="Client":
-    r1.select()
-    r2.deselect()
-    r3.deselect()
-  elif cus_ins_val[22]=="Vender":
-    r1.deselect()
-    r2.select()
-    r3.deselect()
-  else:
-    r1.deselect()
-    r2.deselect()
-    r3.select()
-  r1.place(x=5,y=15)
-  r2.place(x=90,y=15)
-  r3.place(x=180,y=15)
-
-  Labelframe8=LabelFrame(Labelframe1,text="Additional Info")
-  Labelframe8.place(x=400,y=288,width=340,height=80)
-  a11=Label(Labelframe8,text="Country:").place(x=10,y=5)
-  a12=Label(Labelframe8,text="City:").place(x=10,y=30)
-  cus_sh_coun=StringVar() 
-  cus_sh_cty=StringVar() 
-
-  b11=ttk.Combobox(Labelframe8,textvariable=cus_sh_coun)
-  b11.place(x=110,y=5,width=210)
-  b11['values'] = ('India','America')  
-  b11.insert(0,cus_ins_val[20])  
-  b11.place(x=110,y=5) 
-  b12=Entry(Labelframe8,textvariable=cus_sh_cty)
-  b12.insert(0,cus_ins_val[21])  
-  b12.place(x=110,y=30,width=210)
-  Labelframe9=LabelFrame(Labelframe1,text="Notes")
-  Labelframe9.place(x=400,y=380,width=340,height=115)
-  '''scrollbar = Scrollbar(Labelframe9)
-        scrollbar.place(x=300,y=10)
-        b12=Entry(Labelframe9,yscrollcommand=scrollbar.set).place(x=10,y=10,width=290,height=70)
-        yscrollcommand.config(command=b12.yview)'''
-  cus_nt=StringVar()
-  global cfgd
-  cfgd=scrolledtext.ScrolledText(Labelframe9)
-  cfgd.insert(1.0,cus_ins_val[23])
-  cfgd.place(x=20,y=10,width=295,height=70)
-  # scrollbar_cus_nt = Scrollbar(Labelframe9)
-  # scrollbar_cus_nt.place(x=295,y=10)
-
-  btn1=Button(edit_customer,width=50,compound = LEFT,image=tick ,command=lambda:cus_edit_cst(),text="  OK").place(x=20, y=545)
-  btn2=Button(edit_customer,width=80,compound = LEFT,image=cancel,text="  Cancel", command=cancel_edt).place(x=665, y=545)
-  edit_customer.mainloop()
-#-----------------------------------------------------------------------------------Delete Customer
-def cus_delete_customer():
-  cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][1]
-  print(cus_id)
-  
-  messagebox.askyesno("Delete Customers", "Are you sure want to delete 1 Customer(s) ?")
-  sql_qr="DELETE FROM customer WHERE customerno=%s"
-  sql_qr_val=(cus_id,)
-  fbcursor.execute(sql_qr,sql_qr_val)
-  fbilldb.commit()
-  cus_main_tree.selection_set(1)
-
-  for record in cus_main_tree.get_children():
-    cus_main_tree.delete(record)
-  cus_main_table_sql="select * from customer"
-  fbcursor.execute(cus_main_table_sql)
-  main_tb_val=fbcursor.fetchall()
-  count_cus=0
-
-  for i in main_tb_val:
-    cus_main_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[24],i[2],i[4],i[8],i[10],i[12],i[22]))
-    count_cus +=1
 
 #-----------------------------------------------------------------------------------Preview Invoice Customer
 def cus_previewinvoice_customer():
@@ -1669,310 +1919,382 @@ def cus_previewinvoice_customer():
   fbcursor.execute(cus_company)
   cus_company= fbcursor.fetchone()
 
+  try:
+    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
 
-  cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+    cus_main_table_sql="select * from orders where businessname=%s"
+    cus_main_table_sql_val=(cus_id,)
+    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+    main_tb_val=fbcursor.fetchone()
 
-  cus_main_table_sql="select * from orders where businessname=%s"
-  cus_main_table_sql_val=(cus_id,)
-  fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
-  main_tb_val=fbcursor.fetchone()
+    sqlr= 'select currencysign from company'
+    fbcursor.execute(sqlr)
+    crncy=fbcursor.fetchone()
+    crc=crncy[0]
+    sqlrt= 'select currsignplace from company'
+    fbcursor.execute(sqlrt)
+    post_rp=fbcursor.fetchone()
+    ps_cr=post_rp[0]
+    
+    #-------------------------------------------------------------------------------------------------Heder data--------
+    labelcmp=Label(cus_in_canvas,text=cus_company[1], bg="white",anchor="nw",font=("Helvetica", 12), width=40, height=2)
+    window = cus_in_canvas.create_window(300,80, anchor="nw", window=labelcmp)
 
-  sqlr= 'select currencysign from company'
-  fbcursor.execute(sqlr)
-  crncy=fbcursor.fetchone()
-  crc=crncy[0]
-  sqlrt= 'select currsignplace from company'
-  fbcursor.execute(sqlrt)
-  post_rp=fbcursor.fetchone()
-  ps_cr=post_rp[0]
-  
-  #-------------------------------------------------------------------------------------------------Heder data--------
-  labelcmp=Label(cus_in_canvas,text=cus_company[1], bg="white",anchor="nw",font=("Helvetica", 12), width=40, height=2)
-  window = cus_in_canvas.create_window(300,80, anchor="nw", window=labelcmp)
+    labelcmpl=Label(cus_in_canvas,text=cus_company[2], bg="white",font=("Helvetica", 9),anchor="nw", width=50,justify=LEFT, height=6)
+    windowl = cus_in_canvas.create_window(300,120, anchor="nw", window=labelcmpl)
+    cus_in_canvas.create_text(950,100, text="Invoices List",font=("Helvetica", 16), justify='right')
+    cus_in_canvas.create_text(350,228,text=cus_company[4],fill='black',font=("Helvetica", 8), justify='left')
+    cus_in_canvas.create_text(953,220,text="Customer ID:"+str(main_tb_val[0]),fill='black',font=("Helvetica", 12), justify='right')
 
-  labelcmpl=Label(cus_in_canvas,text=cus_company[2], bg="white",font=("Helvetica", 9),anchor="nw", width=50,justify=LEFT, height=6)
-  windowl = cus_in_canvas.create_window(300,120, anchor="nw", window=labelcmpl)
-  cus_in_canvas.create_text(950,100, text="Invoices List",font=("Helvetica", 16), justify='right')
-  cus_in_canvas.create_text(350,228,text=cus_company[4],fill='black',font=("Helvetica", 8), justify='left')
-  cus_in_canvas.create_text(953,220,text="Customer ID:"+str(main_tb_val[0]),fill='black',font=("Helvetica", 12), justify='right')
+    cus_sql5="select * from customer where businessname=%s"
+    cus_sql5_vals=(cus_id,)
+    fbcursor.execute(cus_sql5,cus_sql5_vals)
+    cus_det=fbcursor.fetchone()
+    cus_in_canvas.create_line(1038,235,280,235,fill="black", width=2)
+    
+    cus_in_canvas.create_text(330,260,text="Bill To:",fill='black',font=("Helvetica", 12), justify='right')
+    labelcmp=Label(cus_in_canvas,text=cus_det[4] , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=1)
+    window = cus_in_canvas.create_window(305,275, anchor="nw", window=labelcmp)
+    text=cus_det[5]
+    wraped_text="\n".join(wrap(text,30))
+    labelcmp=Label(cus_in_canvas,text=wraped_text , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=4)
+    window = cus_in_canvas.create_window(305,295, anchor="nw", window=labelcmp)
 
-  cus_sql5="select * from customer where businessname=%s"
-  cus_sql5_vals=(cus_id,)
-  fbcursor.execute(cus_sql5,cus_sql5_vals)
-  cus_det=fbcursor.fetchone()
+    cus_in_canvas.create_text(720,260,text="Ship To:",fill='black',font=("Helvetica", 12), justify='right')
+    labelcmp=Label(cus_in_canvas,text=cus_det[6] , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=1)
+    window = cus_in_canvas.create_window(690,275, anchor="nw", window=labelcmp)
+    text=cus_det[7]
+    wraped_text="\n".join(wrap(text,30))
+    labelcmp=Label(cus_in_canvas,text=wraped_text , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=4)
+    window = cus_in_canvas.create_window(690,295, anchor="nw", window=labelcmp)
+    #---------------------------------------------------------------------------------------------------Table Data
 
-  cus_in_canvas.create_text(330,260,text="Bill To:",fill='black',font=("Helvetica", 12), justify='right')
-  labelcmp=Label(cus_in_canvas,text=cus_det[4] , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=1)
-  window = cus_in_canvas.create_window(305,275, anchor="nw", window=labelcmp)
-  text=cus_det[5]
-  wraped_text="\n".join(wrap(text,30))
-  labelcmp=Label(cus_in_canvas,text=wraped_text , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=4)
-  window = cus_in_canvas.create_window(305,295, anchor="nw", window=labelcmp)
+    style=ttk.Style()
+    style.configure("mystyle.Treeview", highlightthickness=0, bd=0, font=('Calibri', 11)) # Modify the font of the body
+    style.configure("mystyle.Treeview.Heading", font=('Calibri', 13), background='white') # Modify the font of the headings
+    style.layout("mystyle.Treeview", [('mystyle.Treeview.treearea', {'sticky': 'nswe'})]) # Remove the borders
 
-  cus_in_canvas.create_text(720,260,text="Ship To:",fill='black',font=("Helvetica", 12), justify='right')
-  labelcmp=Label(cus_in_canvas,text=cus_det[6] , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=1)
-  window = cus_in_canvas.create_window(690,275, anchor="nw", window=labelcmp)
-  text=cus_det[7]
-  wraped_text="\n".join(wrap(text,30))
-  labelcmp=Label(cus_in_canvas,text=wraped_text , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=4)
-  window = cus_in_canvas.create_window(690,295, anchor="nw", window=labelcmp)
-  #---------------------------------------------------------------------------------------------------Table Data
+    # Add a Treeview widge
+                        
+    cus_prv_tree=ttk.Treeview(cus_in_canvas, column=("c1", "c2","c3", "c4", "c5", "c6", "c7","c8"), show='headings', height=30, style='mystyle.Treeview')
+    cus_prv_tree.column("# 1", anchor=E, stretch=NO, width=100)
+    cus_prv_tree.heading("# 1", text="Invoice No")
+    cus_prv_tree.column("# 2", anchor=E, stretch=NO, width=80)
+    cus_prv_tree.heading("# 2", text="Date")
+    cus_prv_tree.column("# 3", anchor=E, stretch=NO, width=80)
+    cus_prv_tree.heading("# 3", text="Due Date")
+    cus_prv_tree.column("# 4", anchor=E, stretch=NO, width=100)
+    cus_prv_tree.heading("# 4", text="Recurring")
+    cus_prv_tree.column("# 5", anchor=E, stretch=NO, width=100)
+    cus_prv_tree.heading("# 5", text="Status")
+    cus_prv_tree.column("# 6", anchor=E, stretch=NO, width=100)
+    cus_prv_tree.heading("# 6", text="Invoice Total")
+    cus_prv_tree.column("# 7", anchor=E, stretch=NO, width=100)
+    cus_prv_tree.heading("# 7", text="Total Paid")
+    cus_prv_tree.column("# 8", anchor=E, stretch=NO, width=100)
+    cus_prv_tree.heading("# 8", text="Balance")
 
-  style=ttk.Style()
-  style.configure("mystyle.Treeview", highlightthickness=0, bd=0, font=('Calibri', 11)) # Modify the font of the body
-  style.configure("mystyle.Treeview.Heading", font=('Calibri', 13), background='white') # Modify the font of the headings
-  style.layout("mystyle.Treeview", [('mystyle.Treeview.treearea', {'sticky': 'nswe'})]) # Remove the borders
+    sql_qry="select * from invoice where businessname=%s"
+    sql_qryvlz=(cus_id,)
+    fbcursor.execute(sql_qry,sql_qryvlz)
+    tre=fbcursor.fetchall() 
+    for record in cus_prv_tree.get_children():
+      cus_prv_tree.delete(record)
+        
 
-  # Add a Treeview widge
+    count=0
+    for i in tre:
+      if i[24] is None:
+        dfh="No"
+      else:
+        dfh="Yes"
+      if ps_cr=="before amount":
+        cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], crc+str(i[8]), crc+str(i[9]), crc+str(i[10])))
                       
-  cus_prv_tree=ttk.Treeview(cus_in_canvas, column=("c1", "c2","c3", "c4", "c5", "c6", "c7","c8"), show='headings', height=30, style='mystyle.Treeview')
-  cus_prv_tree.column("# 1", anchor=E, stretch=NO, width=100)
-  cus_prv_tree.heading("# 1", text="Invoice No")
-  cus_prv_tree.column("# 2", anchor=E, stretch=NO, width=80)
-  cus_prv_tree.heading("# 2", text="Date")
-  cus_prv_tree.column("# 3", anchor=E, stretch=NO, width=80)
-  cus_prv_tree.heading("# 3", text="Due Date")
-  cus_prv_tree.column("# 4", anchor=E, stretch=NO, width=100)
-  cus_prv_tree.heading("# 4", text="Recurring")
-  cus_prv_tree.column("# 5", anchor=E, stretch=NO, width=100)
-  cus_prv_tree.heading("# 5", text="Status")
-  cus_prv_tree.column("# 6", anchor=E, stretch=NO, width=100)
-  cus_prv_tree.heading("# 6", text="Invoice Total")
-  cus_prv_tree.column("# 7", anchor=E, stretch=NO, width=100)
-  cus_prv_tree.heading("# 7", text="Total Paid")
-  cus_prv_tree.column("# 8", anchor=E, stretch=NO, width=100)
-  cus_prv_tree.heading("# 8", text="Balance")
-
-  sql_qry="select * from invoice where businessname=%s"
-  sql_qryvlz=(cus_id,)
-  fbcursor.execute(sql_qry,sql_qryvlz)
-  tre=fbcursor.fetchall() 
-  for record in cus_prv_tree.get_children():
-    cus_prv_tree.delete(record)
-       
-
-  count=0
-  for i in tre:
-    if i[24] is None:
-      dfh="No"
-    else:
-      dfh="Yes"
+      elif ps_cr=="after amount":
+        cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], str(i[8])+crc, str(i[9])+crc,str(i[10])+crc))
+                        
+      elif ps_cr=="before amount with space":
+        cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], crc+" "+str(i[8]), crc+" "+str(i[9]), crc+" "+str(i[10])))
+                        
+      elif ps_cr=="after amount with space":
+        cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5],  str(i[8])+" "+crc, str(i[9])+" "+crc,str(i[10])+" "+crc))
+                        
+                    
+      else:
+        pass
+      count += 1
+    cus_prv_tree.insert('', 'end',text="1",values=('','','','','','','',''))
+    cus_prv_tree.insert('', 'end',text="1",values=('','','-End List-','','','Invoice Total','Total Paid','Balance'))
+    sql_inv_t="select sum(invoicetot),sum(totpaid), sum(balance) from invoice where businessname=%s"
+    sql_inv_t_val=(cus_id,)
+    fbcursor.execute(sql_inv_t,sql_inv_t_val)
+    inv_ttt=fbcursor.fetchone() 
+    
     if ps_cr=="before amount":
-      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], crc+str(i[8]), crc+str(i[9]), crc+str(i[10])))
-                     
+      cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',crc+str(inv_ttt[0]),crc+str(inv_ttt[1]),crc+str(inv_ttt[2])))
     elif ps_cr=="after amount":
-      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], str(i[8])+crc, str(i[9])+crc,str(i[10])+crc))
-                      
+      cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',str(inv_ttt[0])+crc,str(inv_ttt[1])+crc,str(inv_ttt[2])+crc))
     elif ps_cr=="before amount with space":
-      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5], crc+" "+str(i[8]), crc+" "+str(i[9]), crc+" "+str(i[10])))
-                      
+      cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',crc+" "+str(inv_ttt[0]),crc+" "+str(inv_ttt[1]),crc+" "+str(inv_ttt[2])))
     elif ps_cr=="after amount with space":
-      cus_prv_tree.insert(parent='', index='end', iid=i, text='hello', values=(i[1], i[2], i[3],dfh,i[5],  str(i[8])+" "+crc, str(i[9])+" "+crc,str(i[10])+" "+crc))
-                      
-                   
+      cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',str(inv_ttt[0])+" "+crc,str(inv_ttt[1])+" "+crc,str(inv_ttt[2])+" "+crc))
     else:
       pass
-    count += 1
+    
 
-  window = cus_in_canvas.create_window(280, 320, anchor="nw", window=cus_prv_tree)
+
+    window = cus_in_canvas.create_window(280, 320, anchor="nw", window=cus_prv_tree)
+  except:
+    pass
 
               
 #-----------------------------------------------------------------------------------print Invoice Customer
 def cus_printinvoice_customer():
-      from reportlab.pdfgen import canvas
-      # from tkdocviewer import *
-      from reportlab.lib import colors
-      from reportlab.pdfbase.ttfonts import TTFont
-      from reportlab.pdfbase import pdfmetrics
-      from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-      from reportlab.lib.pagesizes import letter, inch
+    from reportlab.pdfgen import canvas
+        # from tkdocviewer import *
+    from reportlab.lib import colors
+    from reportlab.pdfbase.ttfonts import TTFont
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+    from reportlab.lib.pagesizes import letter, inch
+    try:
+        pdf = canvas.Canvas("customer_Reports/CInvoice.pdf", pagesize=letter)
+        cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
+        sqlt= 'select * from customer where businessname=%s'
+        sqlt_val=(cus_id,)
+        fbcursor.execute(sqlt,sqlt_val)
+        cus_ft=fbcursor.fetchone()
 
-      pdf = canvas.Canvas("customer_Reports/Recurring_Invoice_Report.pdf", pagesize=letter)
-      cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
-      sqlt= 'select * from customer where businessname=%s'
-      sqlt_val=(cus_id,)
-      fbcursor.execute(sqlt,sqlt_val)
-      cus_ft=fbcursor.fetchone()
-
-      sql_company = "SELECT * from company"
-      fbcursor.execute(sql_company)
-      company= fbcursor.fetchone()
-      
-      pdf.setFont('Helvetica',12)
-      pdf.drawString(27,768, company[1])
-      text=company[2]
-      wraped_text="\n".join(wrap(text,30))
-      htg=wraped_text.split('\n')
-          
-      vg=len(htg)
-      if vg>0:
-              pdf.drawString(30,752,htg[0])
-              print("1")
-              if vg>1:
-                pdf.drawString(30,738,htg[1])
-                print("2")
-                if vg>2:
-                    pdf.drawString(30,725,htg[2])
-                    print("3")
-                    if vg>3:
-                        pdf.drawString(30,712,htg[3])
-                        print("4")
-                    else:
-                        pass
-                else:
-                    pass
-              else:
-                  pass
-              
-      else:
-              pass
-      pdf.drawString(35,700, "Sales tax reg No:"+company[4])
-      pdf.drawString(490,760, "Invoice Report")
-
-      pdf.drawString(460,700,"Customer ID:"+str(cus_ft[0]))
-      pdf.drawString(28,695,"__________________________________________________________________________________")
-      pdf.drawString(31,680,"Bill To:")
-      pdf.drawString(31,668,cus_ft[4])
-      text=cus_ft[5]
-      wraped_text="\n".join(wrap(text,30))
-      htg=wraped_text.split('\n')
-          
-      vg=len(htg)
-      if vg>0:
-              pdf.drawString(30,654,htg[0])
-              print("1")
-              if vg>1:
-                pdf.drawString(30,640,htg[1])
-                print("2")
-                if vg>2:
-                    pdf.drawString(30,626,htg[2])
-                    print("3")
-                    if vg>3:
-                        pdf.drawString(30,612,htg[3])
-                        print("4")
-                    else:
-                        pass
-                else:
-                    pass
-              else:
-                  pass
-              
-      else:
-              pass
-
-      pdf.drawString(400,680,"Ship To:")
-      pdf.drawString(400,668,cus_ft[6])
-      text=cus_ft[7]
-      wraped_text="\n".join(wrap(text,30))
-      htg=wraped_text.split('\n')
-          
-      vg=len(htg)
-      if vg>0:
-              pdf.drawString(400,654,htg[0])
-              print("1")
-              if vg>1:
-                pdf.drawString(400,640,htg[1])
-                print("2")
-                if vg>2:
-                    pdf.drawString(400,626,htg[2])
-                    print("3")
-                    if vg>3:
-                        pdf.drawString(400,612,htg[3])
-                        print("4")
-                    else:
-                        pass
-                else:
-                    pass
-              else:
-                  pass
-              
-      else:
-              pass
-
-      pdf.drawString(28,606,"__________________________________________________________________________________")
-
-
-      pdf.drawString(28,591,"__________________________________________________________________________________")
-      pdf.drawString(28,591,"Invoice No           Date        Due Date     Recurring      Status        Invoice Total    Total Paid   Balance      ")
-      
-      
-      sqlr= 'select currencysign from company'
-      fbcursor.execute(sqlr)
-      crncy=fbcursor.fetchone()
+        sql_company = "SELECT * from company"
+        fbcursor.execute(sql_company)
+        company= fbcursor.fetchone()
         
-      crc=crncy[0]
-      sqlrt= 'select currsignplace from company'
-      fbcursor.execute(sqlrt)
-      post_rp=fbcursor.fetchone()
-      ps_cr=post_rp[0]
-      count=0
-      sql_inv_dt='SELECT * FROM invoice where businessname=%s'
-      inv_valuz=(cus_id,)
-      fbcursor.execute(sql_inv_dt,inv_valuz)
-      tre=fbcursor.fetchall()
-      x=571
+        pdf.setFont('Helvetica',12)
+        pdf.drawString(27,768, company[1])
+        text=company[2]
+        wraped_text="\n".join(wrap(text,30))
+        htg=wraped_text.split('\n')
+            
+        vg=len(htg)
+        if vg>0:
+                pdf.drawString(30,752,htg[0])
+                print("1")
+                if vg>1:
+                  pdf.drawString(30,738,htg[1])
+                  print("2")
+                  if vg>2:
+                      pdf.drawString(30,725,htg[2])
+                      print("3")
+                      if vg>3:
+                          pdf.drawString(30,712,htg[3])
+                          print("4")
+                      else:
+                          pass
+                  else:
+                      pass
+                else:
+                    pass
+                
+        else:
+                pass
+        pdf.drawString(35,700, "Sales tax reg No:"+company[4])
+        pdf.drawString(490,760, "Invoice Report")
 
-      for i in tre:
-                    if x==38 or x==50:
-                        pdf.showPage()
-                        x=750
-                    else:
-                        if i[24] is None:
-                            dfh="No"
-                        else:
-                            dfh="Yes"
-                        if ps_cr=="before amount":
-                            pdf.drawString(28,x,str(i[1]))
-                      
-                            pdf.drawString(100,x,str(i[2]))
-                            pdf.drawString(168,x,str(i[3]))
-                            pdf.drawString(250,x,dfh)
-                            pdf.drawString(315,x,str(i[5])) 
-                            pdf.drawString(380,x,str(crc)+str(i[8]))
-                            pdf.drawString(460,x,str(crc)+str(i[9]))
-                            pdf.drawString(522,x,str(crc)+str(i[10]))
-                            
-                        elif ps_cr=="after amount":
-                            pdf.drawString(28,x,str(i[1]))
-                            pdf.drawString(100,x,str(i[2]))
-                            pdf.drawString(168,x,str(i[3]))
-                            pdf.drawString(250,x,str(dfh))
-                            pdf.drawString(315,x,str(i[5])) 
-                            pdf.drawString(380,x,str(i[8])+str(crc))
-                            pdf.drawString(460,x,str(i[9])+str(crc))
-                            pdf.drawString(522,x,str(i[10])+str(crc))
-                            
-                        elif ps_cr=="before amount with space":
-                            pdf.drawString(28,x,str(i[1]))
-                      
-                            pdf.drawString(100,x,str(i[2]))
-                            pdf.drawString(168,x,str(i[3]))
-                            pdf.drawString(250,x,str(dfh))
-                            pdf.drawString(315,x,str(i[5])) 
-                            pdf.drawString(380,x,str(crc)+" "+str(i[8]))
-                            pdf.drawString(460,x,str(crc)+" "+str(i[9]))
-                            pdf.drawString(522,x,str(crc)+" "+str(i[10]))
-                            
-                            
-                        elif ps_cr=="after amount with space":
-                            pdf.drawString(28,x,str(i[1]))
-                            pdf.drawString(100,x,str(i[2]))
-                            pdf.drawString(168,x,str(i[3]))
-                            pdf.drawString(250,x,str(dfh))
-                            pdf.drawString(315,x,str(i[5])) 
-                            pdf.drawString(380,x,str(i[8])+" "+str(crc))
-                            pdf.drawString(460,x,str(i[9])+" "+str(crc))
-                            pdf.drawString(522,x,str(i[10])+" "+str(crc))
+        pdf.drawString(460,700,"Customer ID:"+str(cus_ft[0]))
+        pdf.drawString(28,695,"__________________________________________________________________________________")
+        pdf.drawString(31,680,"Bill To:")
+        pdf.drawString(31,668,cus_ft[4])
+        text=cus_ft[5]
+        wraped_text="\n".join(wrap(text,30))
+        htg=wraped_text.split('\n')
+            
+        vg=len(htg)
+        if vg>0:
+                pdf.drawString(30,654,htg[0])
+                print("1")
+                if vg>1:
+                  pdf.drawString(30,640,htg[1])
+                  print("2")
+                  if vg>2:
+                      pdf.drawString(30,626,htg[2])
+                      print("3")
+                      if vg>3:
+                          pdf.drawString(30,612,htg[3])
+                          print("4")
+                      else:
+                          pass
+                  else:
+                      pass
+                else:
+                    pass
+                
+        else:
+                pass
+
+        pdf.drawString(400,680,"Ship To:")
+        pdf.drawString(400,668,cus_ft[6])
+        text=cus_ft[7]
+        wraped_text="\n".join(wrap(text,30))
+        htg=wraped_text.split('\n')
+            
+        vg=len(htg)
+        if vg>0:
+                pdf.drawString(400,654,htg[0])
+                print("1")
+                if vg>1:
+                  pdf.drawString(400,640,htg[1])
+                  print("2")
+                  if vg>2:
+                      pdf.drawString(400,626,htg[2])
+                      print("3")
+                      if vg>3:
+                          pdf.drawString(400,612,htg[3])
+                          print("4")
+                      else:
+                          pass
+                  else:
+                      pass
+                else:
+                    pass
+                
+        else:
+                pass
+
+        pdf.drawString(28,606,"__________________________________________________________________________________")
+
+
+        pdf.drawString(28,591,"__________________________________________________________________________________")
+        pdf.drawString(28,591,"Invoice No           Date        Due Date     Recurring      Status        Invoice Total    Total Paid   Balance      ")
+        
+        
+        sqlr= 'select currencysign from company'
+        fbcursor.execute(sqlr)
+        crncy=fbcursor.fetchone()
+          
+        crc=crncy[0]
+        sqlrt= 'select currsignplace from company'
+        fbcursor.execute(sqlrt)
+        post_rp=fbcursor.fetchone()
+        ps_cr=post_rp[0]
+        count=0
+        sql_inv_dt='SELECT * FROM invoice where businessname=%s'
+        inv_valuz=(cus_id,)
+        fbcursor.execute(sql_inv_dt,inv_valuz)
+        tre=fbcursor.fetchall()
+        x=571
+
+        for i in tre:
+                      if x==38 or x==50:
+                          pdf.showPage()
+                          x=750
+                      else:
+                          if i[24] is None:
+                              dfh="No"
+                          else:
+                              dfh="Yes"
+                          if ps_cr=="before amount":
+                              pdf.drawString(28,x,str(i[1]))
                         
-                        else:
-                            pass
-                       
-                    count += 1
-                    x-=15
+                              pdf.drawString(100,x,str(i[2]))
+                              pdf.drawString(168,x,str(i[3]))
+                              pdf.drawString(250,x,dfh)
+                              pdf.drawString(315,x,str(i[5])) 
+                              pdf.drawString(380,x,str(crc)+str(i[8]))
+                              pdf.drawString(460,x,str(crc)+str(i[9]))
+                              pdf.drawString(522,x,str(crc)+str(i[10]))
+                              
+                          elif ps_cr=="after amount":
+                              pdf.drawString(28,x,str(i[1]))
+                              pdf.drawString(100,x,str(i[2]))
+                              pdf.drawString(168,x,str(i[3]))
+                              pdf.drawString(250,x,str(dfh))
+                              pdf.drawString(315,x,str(i[5])) 
+                              pdf.drawString(380,x,str(i[8])+str(crc))
+                              pdf.drawString(460,x,str(i[9])+str(crc))
+                              pdf.drawString(522,x,str(i[10])+str(crc))
+                              
+                          elif ps_cr=="before amount with space":
+                              pdf.drawString(28,x,str(i[1]))
+                        
+                              pdf.drawString(100,x,str(i[2]))
+                              pdf.drawString(168,x,str(i[3]))
+                              pdf.drawString(250,x,str(dfh))
+                              pdf.drawString(315,x,str(i[5])) 
+                              pdf.drawString(380,x,str(crc)+" "+str(i[8]))
+                              pdf.drawString(460,x,str(crc)+" "+str(i[9]))
+                              pdf.drawString(522,x,str(crc)+" "+str(i[10]))
+                              
+                              
+                          elif ps_cr=="after amount with space":
+                              pdf.drawString(28,x,str(i[1]))
+                              pdf.drawString(100,x,str(i[2]))
+                              pdf.drawString(168,x,str(i[3]))
+                              pdf.drawString(250,x,str(dfh))
+                              pdf.drawString(315,x,str(i[5])) 
+                              pdf.drawString(380,x,str(i[8])+" "+str(crc))
+                              pdf.drawString(460,x,str(i[9])+" "+str(crc))
+                              pdf.drawString(522,x,str(i[10])+" "+str(crc))
+                          
+                          else:
+                              pass
+                        
+                      count += 1
+                    
+                      x-=15
+        sql_inv_t="select sum(invoicetot),sum(totpaid), sum(balance) from invoice where businessname=%s"
+        sql_inv_t_val=(cus_id,)
+        fbcursor.execute(sql_inv_t,sql_inv_t_val)
+        inv_ttt=fbcursor.fetchone() 
+        pdf.drawString(28,x,"__________________________________________________________________________________")
+        if ps_cr=="before amount":
+                              
+                              pdf.drawString(28,x-13,"")
+                        
+                              pdf.drawString(100,x-13,"")
+                              pdf.drawString(168,x-13,"")
+                              pdf.drawString(250,x-13,"-Summary-")
+                              pdf.drawString(315,x-13,"") 
+                              pdf.drawString(380,x-13,str(crc)+str(inv_ttt[0]))
+                              pdf.drawString(460,x-13,str(crc)+str(inv_ttt[1]))
+                              pdf.drawString(522,x-13,str(crc)+str(inv_ttt[2]))
+        elif ps_cr=="after amount":
+                            
+                              pdf.drawString(28,x-13,"")
+                              pdf.drawString(100,x-13,"")
+                              pdf.drawString(168,x-13,"-Summary-")
+                              pdf.drawString(250,x-13,"")
+                              pdf.drawString(315,x-13,"") 
+                              pdf.drawString(380,x-13,str(inv_ttt[0])+str(crc))
+                              pdf.drawString(460,x-13,str(inv_ttt[1])+str(crc))
+                              pdf.drawString(522,x-13,str(inv_ttt[2])+str(crc))
+        elif ps_cr=="before amount with space":
+                              pdf.drawString(28,x-13,"")
+                        
+                              pdf.drawString(100,x-13,"")
+                              pdf.drawString(168,x-13,"-Summary-")
+                              pdf.drawString(250,x-13,"")
+                              pdf.drawString(315,x-13,"") 
+                              pdf.drawString(380,x-13,str(crc)+" "+str(inv_ttt[0]))
+                              pdf.drawString(460,x-13,str(crc)+" "+str(inv_ttt[1]))
+                              pdf.drawString(522,x-13,str(crc)+" "+str(inv_ttt[2]))
+        elif ps_cr=="after amount with space":
+                              pdf.drawString(28,x-13,"")
+                              pdf.drawString(100,x-13,"")
+                              pdf.drawString(168,x-13,"-Summary-")
+                              pdf.drawString(250,x-13,"")
+                              pdf.drawString(315,x-13,"") 
+                              pdf.drawString(380,x-13,str(inv_ttt[0])+" "+str(crc))
+                              pdf.drawString(460,x-13,str(inv_ttt[1])+" "+str(crc))
+                              pdf.drawString(522,x-13,str(inv_ttt[2])+" "+str(crc))
+        else:
+                        pass
 
 
-      pdf.save()
-      win32api.ShellExecute(0,"","customer_Reports\Recurring_Invoice_Report.pdf",None,".",0)
+        pdf.save()
+        win32api.ShellExecute(0,"","customer_Reports\CInvoice.pdf",None,".",0)
+    except:
+      pass
 
 #-----------------------------------------------------------------------------------Customer Sms
 def cus_customersms():
@@ -2697,7 +3019,7 @@ def cus_search_customers():
     top.title("Find Text")
     p2 = PhotoImage(file = "images/fbicon.png")
     top.iconphoto(False, p2)
-    top.geometry("520x180+390+250")
+    top.geometry("520x150+390+250")
     findwhat1=Label(top,text="Find What:")
     findwhat1.place(x=5,y=15)
     fnd_srh_txt = StringVar() 
@@ -2722,21 +3044,8 @@ def cus_search_customers():
     findIN.current(0)
     closeButton = Button(top, text ="Close",width=10, command=lambda:fnd_dist())
     closeButton.place(x=420,y=45)
-    match1=Label(top,text="Match:")
-    match1.place(x=5,y=65)
-    match_var = StringVar() 
-    match = ttk.Combobox(top, width = 27, textvariable = match_var ) 
-    match['values'] = ('From any part of the field','Whole field',  
-                              'From beging of field')
-    match.place(x=85,y=65,height=23) 
-    match.current(0)
-    search1=Label(top,text="Search:")
-    search1.place(x=5,y=90)
+   
     up_var = StringVar() 
-    search = ttk.Combobox(top, width = 27, textvariable = up_var)
-    search['values'] = ('Up','Down','All') 
-    search.current(0)
-    search.place(x=85,y=90,height=23) 
     checkvarStatus4=IntVar()
     Button4 = Checkbutton(top,variable = checkvarStatus4, 
                       text="Match Case", 
@@ -2745,7 +3054,7 @@ def cus_search_customers():
                       height=3,
                       width = 15)
     Button4.select()
-    Button4.place(x=60,y=120)
+    Button4.place(x=60,y=80)
     checkvarStatus5=IntVar()  
     Button5 = Checkbutton(top,variable = checkvarStatus5, 
                       text="Match Format", 
@@ -2754,7 +3063,7 @@ def cus_search_customers():
                       height=3,
                       width = 15)
     Button5.select()
-    Button5.place(x=270,y=120)
+    Button5.place(x=270,y=80)
     top.mainloop()
 #-----------------------------------------------------------------------------------Refresh Customer
 def cus_refresh_customers(): 
@@ -2872,43 +3181,47 @@ def cus_inv_btm(event):
     cus_inv2_tree.heading("7",text="Invoice Total")
     cus_inv2_tree.heading("8",text="Total Paid")
     cus_inv2_tree.heading("9",text="Balance")
-    cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
- 
-    cus_main_table_sql="select * from invoice where businessname=%s"
-    cus_main_table_sql_val=(cus_id,)
-    fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
-    main_tb_val=fbcursor.fetchall()
-    count_cus=0
-    sqlr= 'select currencysign from company'
-    fbcursor.execute(sqlr)
-    crncy=fbcursor.fetchone()
-    crcy=crncy[0]
-    sqlrt= 'select currsignplace from company'
-    fbcursor.execute(sqlrt)
-    post_rp=fbcursor.fetchone()
-    cency_pos=post_rp[0]
+    try:
+      cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
     
-
-    for i in main_tb_val:
-      if i[24] is None:
-        dfh="No"
-      else:
-        dfh="Yes"
+ 
+      cus_main_table_sql="select * from invoice where businessname=%s"
+      cus_main_table_sql_val=(cus_id,)
+      fbcursor.execute(cus_main_table_sql,cus_main_table_sql_val)
+      main_tb_val=fbcursor.fetchall()
+      count_cus=0
+      sqlr= 'select currencysign from company'
+      fbcursor.execute(sqlr)
+      crncy=fbcursor.fetchone()
+      crcy=crncy[0]
+      sqlrt= 'select currsignplace from company'
+      fbcursor.execute(sqlrt)
+      post_rp=fbcursor.fetchone()
+      cency_pos=post_rp[0]
       
-      if cency_pos=="before amount":   
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
-        count_cus +=1
-      elif cency_pos=="after amount": 
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
-        count_cus +=1
-      elif cency_pos=="before amount with space": 
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
-        count_cus +=1 
-      elif cency_pos=="after amount with space":
-        cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
-        count_cus +=1
-      else:
-        pass
+
+      for i in main_tb_val:
+        if i[24] is None:
+          dfh="No"
+        else:
+          dfh="Yes"
+        
+        if cency_pos=="before amount":   
+          cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+str(i[8]),crcy+str(i[9]),crcy+str(i[10])))
+          count_cus +=1
+        elif cency_pos=="after amount": 
+          cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+crcy,str(i[9])+crcy,str(i[10])+crcy))
+          count_cus +=1
+        elif cency_pos=="before amount with space": 
+          cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],crcy+" "+str(i[8]),crcy+" "+str(i[9]),crcy+" "+str(i[10])))
+          count_cus +=1 
+        elif cency_pos=="after amount with space":
+          cus_inv2_tree.insert(parent='', index='end', iid=count_cus, text='hello', values=("",i[1],i[2],i[3],dfh,i[4],str(i[8])+" "+crcy,str(i[9])+" "+crcy,str(i[10])+" "+crcy))
+          count_cus +=1
+        else:
+          pass
+    except:
+      pass
   # #-------------------------------------------------------------------------------bottom tree order
 def cus_ord_btm():
     cus_ord_s=ttk.Style()
@@ -3058,7 +3371,7 @@ def cus_stm_btm():
     cus_stm_tree.column("8",width=160,anchor='c')
     cus_stm_tree.column("9",width=140,anchor='c')
     cus_stm_tree.heading("1",text="")
-    cus_stm_tree.heading("2",text="#ID")
+    cus_stm_tree.heading("2",text="Invoice ID#")
     cus_stm_tree.heading("3",text="Issue Date")
     cus_stm_tree.heading("4",text="Due Date")
     cus_stm_tree.heading("5",text="Recurring")
@@ -3289,9 +3602,8 @@ def ct_filter(event):
     pass
 
 ####################################################################################################################
-def selct_all_cus():
- 
-  cus_main_tree.selection()
+
+
 global cus_main_tree
 cus_main_s=ttk.Style()
 cus_main_s.configure('Treeview.Heading',background='white')
@@ -3330,38 +3642,20 @@ for i in main_tb_val:
     count_cus +=1
 cus_main_tree.bind('<<TreeviewSelect>>',cus_inv_btm)
 # cus_main_tree.selection_set(9)
-def cus_my_popup(event):
-              cus_menu.tk_popup(event.x_root, event.y_root)
-              
-cus_menu= Menu(cus_main_tree, tearoff=False)
-cus_menu.add_command(label="Select All Rows", command=lambda:selct_all_cus())
-cus_menu.add_command(label="Unselect All Rows", command="lambda:category()")
-cus_menu.add_separator()
-cus_menu.add_command(label="Add New Customer", command=lambda:cus_add_customer())
-cus_menu.add_command(label="Edit/View Customer", command=lambda:cus_edit_customer())
-cus_menu.add_command(label="Delete Customer", command=lambda:cus_delete_customer())
-
-cus_menu.add_separator()
-cus_menu.add_command(label="Send Late Payment Email", command=lambda:cus_addemail_order())
-cus_menu.add_separator()
-cus_menu.add_command(label="Export List To Excel(xls)", command=lambda:cus_export_customer())
-cus_menu.add_separator()
-cus_menu.add_command(label="Search", command=lambda:cus_search_customers())
-cus_main_tree.bind("<Button-3>", cus_my_popup)
-
 
 #----------------------------------------------------------------------------Button bottam table-----
-cus_btn=Button(tab7, text="Invoices", width=15, command=lambda:cus_inv_btm1())
+
+cus_btn=Button(tab7, text="Invoices",image=invoices,compound = LEFT, width=108, command=lambda:cus_inv_btm1())
 cus_btn.place(x=7, y=390)
-cus_btn=Button(tab7, text="Orders", width=15, command=lambda:cus_ord_btm())
+cus_btn=Button(tab7, text="Orders", image=orders,compound = LEFT, width=108, command=lambda:cus_ord_btm())
 cus_btn.place(x=125, y=390)
-cus_btn=Button(tab7, text="Estimates", width=15, command=lambda:cus_est_btm())
+cus_btn=Button(tab7, text="Estimates", image=estimates,compound = LEFT, width=108, command=lambda:cus_est_btm())
 cus_btn.place(x=243, y=390)
-cus_btn=Button(tab7, text="Statement", width=15, command=lambda:cus_stm_btm())
+cus_btn=Button(tab7, text="Statement", image=invoices,compound = LEFT, width=108, command=lambda:cus_stm_btm())
 cus_btn.place(x=361, y=390)
-cus_btn=Button(tab7, text="Payments", width=15, command=lambda:cus_pym_btm())
+cus_btn=Button(tab7, text="Payments",image=expenses,compound = LEFT, width=108, command=lambda:cus_pym_btm())
 cus_btn.place(x=479,y=390)
-cus_btn=Button(tab7, text="Purchase O.", width=15, command=lambda:cus_pod_btm())
+cus_btn=Button(tab7, text="Purchase O.", image=purchase,compound = LEFT, width=108, command=lambda:cus_pod_btm())
 cus_btn.place(x=597, y=390)
 
 #-------------------------------------------------------------------------Bottom Table one-------------
@@ -3396,33 +3690,6 @@ cus_inv_tree.heading("8",text="Total Paid")
 cus_inv_tree.heading("9",text="Balance")
 
 #---------------------------------------------------------------------------------Bottom 
-# cus_s=ttk.Style()
-# cus_s.configure('Treeview.Heading',background='white')
-# cus_tree=ttk.Treeview(tab7,selectmode='browse')
-# cus_tree.place(x=0,y=670,height=20)
-# cus_tree["columns"]=("1","2","3","4","5","6","7","8","9")
-# cus_tree["show"]='headings'
-
-
-# cus_tree.column("1",width=20,anchor='c')
-# cus_tree.column("2",width=140,anchor='c')
-# cus_tree.column("3",width=110,anchor='c')
-# cus_tree.column("4",width=110,anchor='c')
-# cus_tree.column("5",width=120,anchor='c')
-# cus_tree.column("6",width=120,anchor='c')
-# cus_tree.column("7",width=160,anchor='c')
-# cus_tree.column("8",width=160,anchor='c')
-# cus_tree.column("9",width=140,anchor='c')
-# cus_tree.heading("1",text="")
-# cus_tree.heading("2",text="Invoice(s)")
-# cus_tree.heading("3",text="")
-# cus_tree.heading("4",text="")
-# cus_tree.heading("5",text="")
-# cus_tree.heading("6",text="")
-# cus_tree.heading("7",text="")
-# cus_tree.heading("8",text="")
-# cus_tree.heading("9",text="")
-
 
 #------------------------------------------------------------Right side table list box in main----------------
 cus_tree1=ttk.Treeview(tab7,selectmode='browse')
