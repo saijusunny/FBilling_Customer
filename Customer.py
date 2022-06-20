@@ -1838,9 +1838,9 @@ def mainpage():
   #$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$((Top Button Functions))
   #---------------------------------------------------------------------------------Mail
   def cus_send_mails():
-        
+      try:
         cus_sender_email = "saijuinfox@gmail.com"    
-        cus_sender_password = "8848937577" 
+        cus_sender_password = "eywcinveepcwchnn" 
 
         cus_server = smtplib.SMTP('smtp.gmail.com', 587)
       
@@ -1869,14 +1869,14 @@ def mainpage():
 
         for i in cus_lst_data:
             if len(i.strip()[1:-1])>1:
-
-                with open('images/'+ i.strip()[1:-1], "rb") as attachment:
+              
+                with open('customer_Reports/'+ i.strip()[1:-1], "rb") as attachment:
       
                     cus_part = MIMEBase("application", "octet-stream")
                     cus_part.set_payload(attachment.read())
 
                     encoders.encode_base64(cus_part)
-                    cus_part.add_header('Content-Disposition', "attachment; filename= %s" % 'images/'+ i.strip()[1:-1]) 
+                    cus_part.add_header('Content-Disposition', "attachment; filename= %s" % 'customer_Reports/'+ i.strip()[1:-1]) 
 
         
                     cus_msg.attach(cus_part)
@@ -1884,6 +1884,8 @@ def mainpage():
 
         cus_server.sendmail(cus_email_from.get(),cus_email_address.get(),cus_msg.as_string())
         cus_server.sendmail(cus_email_from.get(), cus_carbcopy_info,cus_msg.as_string()) 
+      except:
+        pass
   def cus_empsfile_image(event):
               global cus_yawn
               for i in cus_htcodeframe.curselection():
@@ -1914,7 +1916,7 @@ def mainpage():
           global cus_filenamez
           cus_filenamez = askopenfilename(filetypes=(('PDF', '*.pdf',),("png file ",'.png'),("jpg file", ".jpg"),  ("All files", "*.*"),))
           
-          shutil.copyfile(cus_filenamez, os.getcwd()+'/images/'+cus_filenamez.split('/')[-1])
+          shutil.copyfile(cus_filenamez, os.getcwd()+'/customer_Reports/'+cus_filenamez.split('/')[-1])
           cus_htcodeframe.insert(0, cus_filenamez.split('/')[-1]) 
   def cus_addemail_order():
           try:
@@ -1967,7 +1969,7 @@ def mainpage():
             cus_lbl_subject=Label(cus_messagelbframe, text="Subject").place(x=5, y=59)
             cus_subent=Entry(cus_messagelbframe, width=50, textvariable=cus_email_subject)
             cus_subent.place(x=120, y=59)
-            cus_subjectinsrt='ORD_'+str("")
+            cus_subjectinsrt='Invoice Report'+str("")
             cus_subent.delete(0,'end')
             cus_subent.insert(0, cus_subjectinsrt)
 
@@ -2435,47 +2437,59 @@ def mainpage():
                 inv_ttt=fbcursor.fetchone() 
                 pdf.drawString(28,x,"__________________________________________________________________________________")
                 if ps_cr=="before amount":
-                                      
-                                      pdf.drawString(28,x-13,"")
-                                
-                                      pdf.drawString(100,x-13,"")
-                                      pdf.drawString(168,x-13,"")
-                                      pdf.drawString(250,x-13,"-Summary-")
-                                      pdf.drawString(315,x-13,"") 
-                                      pdf.drawString(375,x-13,str(crc)+str(inv_ttt[0]))
-                                      pdf.drawString(455,x-13,str(crc)+str(inv_ttt[1]))
-                                      pdf.drawString(517,x-13,str(crc)+str(inv_ttt[2]))
+                                        if inv_ttt[0] is None:
+                                          dtr=0
+                                        else:
+                                          dtr=inv_ttt[0]
+                                        if inv_ttt[1] is None:
+                                          dtr1=0
+                                        else:
+                                          dtr1=inv_ttt[1]
+                                        if inv_ttt[2] is None:
+                                          dtr2=0
+                                        else:
+                                          dtr2=inv_ttt[2]
+                                        
+                                        pdf.drawString(28,x-13,"")
+                                  
+                                        pdf.drawString(100,x-13,"")
+                                        pdf.drawString(168,x-13,"")
+                                        pdf.drawString(250,x-13,"-Summary-")
+                                        pdf.drawString(315,x-13,"") 
+                                        pdf.drawString(375,x-13,str(crc)+str(dtr))
+                                        pdf.drawString(455,x-13,str(crc)+str(dtr1))
+                                        pdf.drawString(517,x-13,str(crc)+str(dtr2))
                 elif ps_cr=="after amount":
-                                    
-                                      pdf.drawString(28,x-13,"")
-                                      pdf.drawString(100,x-13,"")
-                                      pdf.drawString(168,x-13,"-Summary-")
-                                      pdf.drawString(250,x-13,"")
-                                      pdf.drawString(315,x-13,"") 
-                                      pdf.drawString(375,x-13,str(inv_ttt[0])+str(crc))
-                                      pdf.drawString(455,x-13,str(inv_ttt[1])+str(crc))
-                                      pdf.drawString(517,x-13,str(inv_ttt[2])+str(crc))
+                                      
+                                        pdf.drawString(28,x-13,"")
+                                        pdf.drawString(100,x-13,"")
+                                        pdf.drawString(168,x-13,"-Summary-")
+                                        pdf.drawString(250,x-13,"")
+                                        pdf.drawString(315,x-13,"") 
+                                        pdf.drawString(375,x-13,str(dtr)+str(crc))
+                                        pdf.drawString(455,x-13,str(dtr1)+str(crc))
+                                        pdf.drawString(517,x-13,str(dtr2)+str(crc))
                 elif ps_cr=="before amount with space":
-                                      pdf.drawString(28,x-13,"")
-                                
-                                      pdf.drawString(100,x-13,"")
-                                      pdf.drawString(168,x-13,"-Summary-")
-                                      pdf.drawString(250,x-13,"")
-                                      pdf.drawString(315,x-13,"") 
-                                      pdf.drawString(375,x-13,str(crc)+" "+str(inv_ttt[0]))
-                                      pdf.drawString(455,x-13,str(crc)+" "+str(inv_ttt[1]))
-                                      pdf.drawString(517,x-13,str(crc)+" "+str(inv_ttt[2]))
+                                        pdf.drawString(28,x-13,"")
+                                  
+                                        pdf.drawString(100,x-13,"")
+                                        pdf.drawString(168,x-13,"-Summary-")
+                                        pdf.drawString(250,x-13,"")
+                                        pdf.drawString(315,x-13,"") 
+                                        pdf.drawString(375,x-13,str(crc)+" "+str(dtr))
+                                        pdf.drawString(455,x-13,str(crc)+" "+str(dtr1))
+                                        pdf.drawString(517,x-13,str(crc)+" "+str(dtr2))
                 elif ps_cr=="after amount with space":
-                                      pdf.drawString(28,x-13,"")
-                                      pdf.drawString(100,x-13,"")
-                                      pdf.drawString(168,x-13,"-Summary-")
-                                      pdf.drawString(250,x-13,"")
-                                      pdf.drawString(315,x-13,"") 
-                                      pdf.drawString(375,x-13,str(inv_ttt[0])+" "+str(crc))
-                                      pdf.drawString(455,x-13,str(inv_ttt[1])+" "+str(crc))
-                                      pdf.drawString(517,x-13,str(inv_ttt[2])+" "+str(crc))
+                                        pdf.drawString(28,x-13,"")
+                                        pdf.drawString(100,x-13,"")
+                                        pdf.drawString(168,x-13,"-Summary-")
+                                        pdf.drawString(250,x-13,"")
+                                        pdf.drawString(315,x-13,"") 
+                                        pdf.drawString(375,x-13,str(dtr)+" "+str(crc))
+                                        pdf.drawString(455,x-13,str(dtr1)+" "+str(crc))
+                                        pdf.drawString(517,x-13,str(dtr2)+" "+str(crc))
                 else:
-                                pass
+                                  pass
 
 
                 pdf.save()
@@ -2875,7 +2889,8 @@ def mainpage():
 
 
     edt_lty=(Labelframe6.register(tax_frt), '%S','%d')
-   
+    blsr=Entry(Labelframe6, textvariable=cus_sp_tx)
+    bdsfd14=Entry(Labelframe6)
     if fdt[0]=='3':
       a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
       blsr=Entry(Labelframe6, )
@@ -2883,13 +2898,13 @@ def mainpage():
       # edt_ltyr=(Labelframe6.register(tax_frtinv),)
       blsr.config(validate='key',validatecommand=(edt_lty))
       blsr.place(x=250,y=7,width=70)
-      bdsfd14=Entry(Labelframe6)
+      
       bdsfd14.config(validate='key',validatecommand=(edt_lty))
       bdsfd14.place(x=250,y=30,width=70)
       a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
     elif fdt[0]=='2':
       a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-      blsr=Entry(Labelframe6, textvariable=cus_sp_tx)
+      
       blsr.config(validate='key',validatecommand=(edt_lty))
       blsr.place(x=250,y=7,width=70)
     elif fdt[0]=='1':
@@ -3032,7 +3047,7 @@ def mainpage():
       b2.place(x=390,y=7,width=220)
       cus_st = IntVar()
       chkbtn1 = Checkbutton(Labelframe1, text = "Active", variable = cus_st, onvalue = 1, offvalue = 0)
-      if cus_ins_val[3]==0:
+      if cus_ins_val[3]=="0":
         chkbtn1.deselect()
       else:
         chkbtn1.select()
@@ -3062,12 +3077,13 @@ def mainpage():
       cus_sh_nam=StringVar()
       cus_sh_adr=StringVar()
       b11=Entry(Labelframe3, textvariable=cus_sh_nam)
-      b11.insert(0,cus_ins_val[6])
+      b11.insert(0,str(cus_ins_val[6]))
       b11.place(x=110,y=10,width=210)
       b21=Entry(Labelframe3, textvariable=cus_sh_adr)
       b21.delete(0,'end')
-      b21.insert(0,cus_ins_val[7])
+      b21.insert(0,str(cus_ins_val[7]))
       b21.place(x=110,y=35,width=210,height=63)
+      
 
 
       Labelframe4=LabelFrame(Labelframe1,text="Contact")
@@ -3078,13 +3094,14 @@ def mainpage():
       a31=Label(Labelframe4,text="Tel. No:").place(x=10,y=60)
       a41=Label(Labelframe4,text="Fax:").place(x=200,y=60)
       a51=Label(Labelframe4,text="Mobile number for SMS notification:").place(x=10,y=85)
+      
       bs_cnt=StringVar()
       bs_em=StringVar()
       bs_tel=StringVar()
       bs_fax=StringVar()
-      bs_mobi=StringVar()
+      
       b11=Entry(Labelframe4, textvariable=bs_cnt)
-      b11.insert(0,cus_ins_val[8])
+      b11.insert(0,str(cus_ins_val[8]))
       b11.place(x=110,y=10,width=210)
       
       b21=Entry(Labelframe4,textvariable=bs_em)
@@ -3105,14 +3122,15 @@ def mainpage():
       def on_invalid():
             b21.config(fg="red")
             
-      vcmd = (Labelframe2.register(validate), '%P')
-      ivcmd = (Labelframe2.register(on_invalid),)
+      vcmd = (Labelframe4.register(validate), '%P')
+      ivcmd = (Labelframe4.register(on_invalid),)
 
       
       
-      b21.insert(0,cus_ins_val[9])
+      b21.insert(0,str(cus_ins_val[9]))
       b21.config(validate='focusout', validatecommand=vcmd, invalidcommand=ivcmd)
       b21.place(x=110,y=35,width=210)
+      
       def validate_tel(value):
             
             """
@@ -3131,12 +3149,12 @@ def mainpage():
           b31.config(fg="red")
       
           
-      v_tel_cmd = (Labelframe2.register(validate_tel), '%P')
-      iv_tel_cmd = (Labelframe2.register(on_invalid_tel),)
+      v_tel_cmd = (Labelframe4.register(validate_tel), '%P')
+      iv_tel_cmd = (Labelframe4.register(on_invalid_tel),)
 
       b31=Entry(Labelframe4,textvariable=bs_tel)
       b31.config(validate='focusout', validatecommand=v_tel_cmd, invalidcommand=iv_tel_cmd)
-      b31.insert(0,cus_ins_val[10])
+      b31.insert(0,str(cus_ins_val[10]))
 
       b31.place(x=110,y=60,width=90)
       b4126=Entry(Labelframe4,textvariable=bs_fax)
@@ -3157,13 +3175,13 @@ def mainpage():
       def on_invalid_telb4126():
             b4126.config(fg="red")
             
-      v_tel_cmdb4126 = (Labelframe2.register(validate_telb4126), '%P')
-      iv_tel_cmdb4126 = (Labelframe2.register(on_invalid_telb4126),)
+      v_tel_cmdb4126 = (Labelframe4.register(validate_telb4126), '%P')
+      iv_tel_cmdb4126 = (Labelframe4.register(on_invalid_telb4126),)
       b4126.config(validate='focusout', validatecommand=v_tel_cmdb4126, invalidcommand=iv_tel_cmdb4126)
-      b4126.insert(0,cus_ins_val[11])
+      b4126.insert(0,str(cus_ins_val[11]))
       b4126.place(x=230,y=60,width=90)
-
-      b51=Entry(Labelframe4,textvariable=bs_mobi)
+      bs_mobi=StringVar()
+      b5fd1=Entry(Labelframe4,textvariable=bs_mobi)
       def validate_tel3(value):
             
             """
@@ -3175,26 +3193,25 @@ def mainpage():
             if re.fullmatch(pattern, value) is None:
                 return False
                 
-            b51.config(fg="black")
+            b5fd1.config(fg="black")
             return True
 
       def on_invalid_tel3():
-          b51.config(fg="red")
+          b5fd1.config(fg="red")
       
-          
-      v_tel_cmd3 = (Labelframe2.register(validate_tel3), '%P')
-      iv_tel_cmd3 = (Labelframe2.register(on_invalid_tel3),)
-
-      b51.config(validate='focusout', validatecommand=v_tel_cmd3, invalidcommand=iv_tel_cmd3)
-      b51.insert(0,cus_ins_val[12])
-      b51.place(x=215,y=85,width=105)
+      v_tel_cmd3 = (Labelframe4.register(validate_tel3), '%P')
+      iv_tel_cmd3 = (Labelframe4.register(on_invalid_tel3),)
+      b5fd1.insert(0,str(cus_ins_val[12]))
+      b5fd1.config(validate='focusout', validatecommand=v_tel_cmd3, invalidcommand=iv_tel_cmd3)
+     
+      b5fd1.place(x=215,y=85,width=105)
       btn111=Button(Labelframe1,width=3,height=2,compound = LEFT,text=">>").place(x=359,y=220,height=20)
-
+    
       bs_sh_cnt=StringVar()
       bs_sh_em=StringVar()
       bs_sh_tel=StringVar()
       bs_sh_fax=StringVar()
-
+  
       Labelframe5=LabelFrame(Labelframe1,text="Ship To Contact")
       Labelframe5.place(x=400,y=170,width=340,height=108)
       a11=Label(Labelframe5,text="Contact Person:").place(x=10,y=10)
@@ -3203,7 +3220,7 @@ def mainpage():
       a41=Label(Labelframe5,text="Fax:").place(x=200,y=60)
 
       b11=Entry(Labelframe5, textvariable=bs_sh_cnt)
-      b11.insert(0,cus_ins_val[13])
+      b11.insert(0,str(cus_ins_val[13]))
       b11.place(x=110,y=10,width=210)
       b211=Entry(Labelframe5,textvariable=bs_sh_em)
       
@@ -3227,11 +3244,11 @@ def mainpage():
       def on_invalidb21():
             b211.config(fg="red")
             
-      vcmdb21 = (Labelframe2.register(validateb21), '%P')
-      ivcmdb21 = (Labelframe2.register(on_invalidb21),)
+      vcmdb21 = (Labelframe5.register(validateb21), '%P')
+      ivcmdb21 = (Labelframe5.register(on_invalidb21),)
       
       b211.config(validate='focusout', validatecommand=vcmdb21, invalidcommand=ivcmdb21)
-      b211.insert(0,cus_ins_val[14])
+      b211.insert(0,str(cus_ins_val[14]))
       b211.place(x=110,y=35,width=210)
       b311=Entry(Labelframe5,textvariable=bs_sh_tel)
       def validate_telb311(value):
@@ -3250,10 +3267,10 @@ def mainpage():
 
       def on_invalid_telb311():
           b311.config(fg="red")
-      v_tel_cmdb311 = (Labelframe2.register(validate_telb311), '%P')
-      iv_tel_cmdb311 = (Labelframe2.register(on_invalid_telb311),)
+      v_tel_cmdb311 = (Labelframe5.register(validate_telb311), '%P')
+      iv_tel_cmdb311 = (Labelframe5.register(on_invalid_telb311),)
 
-      b311.insert(0,cus_ins_val[15])
+      b311.insert(0,str(cus_ins_val[15]))
       b311.config(validate='focusout', validatecommand=v_tel_cmdb311, invalidcommand=iv_tel_cmdb311)
       b311.place(x=110,y=60,width=90)
 
@@ -3275,11 +3292,11 @@ def mainpage():
       def on_invalid_telb414():
             b414.config(fg="red")
             
-      v_tel_cmdb414 = (Labelframe2.register(validate_telb414), '%P')
-      iv_tel_cmdb414 = (Labelframe2.register(on_invalid_telb414),)
+      v_tel_cmdb414 = (Labelframe5.register(validate_telb414), '%P')
+      iv_tel_cmdb414 = (Labelframe5.register(on_invalid_telb414),)
       b414.config(validate='focusout', validatecommand=v_tel_cmdb414, invalidcommand=iv_tel_cmdb414)
 
-      b414.insert(0,cus_ins_val[16])
+      b414.insert(0,str(cus_ins_val[16]))
       b414.place(x=230,y=60,width=90)
 
 
@@ -3290,10 +3307,10 @@ def mainpage():
       cus_sp_tx2=IntVar()
       cus_sp_disc=IntVar()
       chkbtn1 = Checkbutton(Labelframe6, text = "Tax Exempt", variable = cus_ds_chk, onvalue = 1, offvalue = 0, font=("arial", 8))
-      if cus_ins_val[17]==0:
-        chkbtn1.select()
-      elif cus_ins_val[17]==0:
+      if cus_ins_val[17]=="0":
         chkbtn1.deselect()
+      else:
+        chkbtn1.select()
       chkbtn1.place(x=10,y=6)
 
       
@@ -3315,7 +3332,7 @@ def mainpage():
 
       edt_lty=(Labelframe6.register(tax_frt), '%S','%d')
 
-      cus_sp_disc.insert(0,cus_ins_val[19])
+      cus_sp_disc.insert(0,str(cus_ins_val[19]))
       cus_sp_disc.config(validate='key',validatecommand=(edt_lty))
       cus_sp_disc.place(x=80,y=30,width=70)
 
@@ -3323,24 +3340,26 @@ def mainpage():
       fbcursor.execute(swt)
       fdt=fbcursor.fetchone()
       print(fdt[0])
-      
+      cus_sp_tx=Entry(Labelframe6)
+      cus_sp_tx2=Entry(Labelframe6)
+      cus_sp_tx=Entry(Labelframe6)
       if fdt[0]=='3':
 
         a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-        cus_sp_tx=Entry(Labelframe6)
-        cus_sp_tx.insert(0,cus_ins_val[18])
+        
+        cus_sp_tx.insert(0,str(cus_ins_val[18]))
         cus_sp_tx.config(validate='key',validatecommand=(edt_lty))
         cus_sp_tx.place(x=250,y=7,width=70)
-        cus_sp_tx2=Entry(Labelframe6)
-        cus_sp_tx2.insert(0,cus_ins_val[25])
+        
+        cus_sp_tx2.insert(0,str(cus_ins_val[25]))
         cus_sp_tx2.config(validate='key',validatecommand=(edt_lty))
         cus_sp_tx2.place(x=250,y=30,width=70)
         
         a16=Label(Labelframe6,text="Specific Tax2%::").place(x=150,y=30)
       elif fdt[0]=='2':
         a11=Label(Labelframe6,text="Specific Tax1%:").place(x=150,y=7)
-        cus_sp_tx=Entry(Labelframe6)
-        cus_sp_tx.insert(0,cus_ins_val[18])
+        
+        cus_sp_tx.insert(0,str(cus_ins_val[18]))
         cus_sp_tx.config(validate='key',validatecommand=(edt_lty))
         cus_sp_tx.place(x=250,y=7,width=70)
       elif fdt[0]=='1':
@@ -3378,10 +3397,10 @@ def mainpage():
       b11=ttk.Combobox(Labelframe8,textvariable=cus_sh_coun)
       b11.place(x=110,y=5,width=210)
       b11['values'] = ('India','America')  
-      b11.insert(0,cus_ins_val[20])  
+      b11.insert(0,str(cus_ins_val[20]))  
       b11.place(x=110,y=5) 
       b12=Entry(Labelframe8,textvariable=cus_sh_cty)
-      b12.insert(0,cus_ins_val[21])  
+      b12.insert(0,str(cus_ins_val[21]))  
       b12.place(x=110,y=30,width=210)
       Labelframe9=LabelFrame(Labelframe1,text="Notes")
       Labelframe9.place(x=400,y=380,width=340,height=115)
@@ -3392,7 +3411,7 @@ def mainpage():
       cus_nt=StringVar()
       global cfgd
       cfgd=scrolledtext.ScrolledText(Labelframe9)
-      cfgd.insert(1.0,cus_ins_val[23])
+      cfgd.insert(1.0,str(str(cus_ins_val[23])))
       cfgd.place(x=20,y=10,width=295,height=70)
       # scrollbar_cus_nt = Scrollbar(Labelframe9)
       # scrollbar_cus_nt.place(x=295,y=10)
@@ -3430,35 +3449,36 @@ def mainpage():
 
   #-----------------------------------------------------------------------------------Preview Invoice Customer
   def cus_previewinvoice_customer():
-    cus_in_preview = Toplevel()
-    cus_in_preview.title("F-Billing Revolution Invoice Report ")
-    cus_in_p2= PhotoImage(file = "images/fbicon.png")
-    cus_in_preview.iconphoto(False, cus_in_p2)
-    cus_in_preview.geometry("1800x1800+0+0")
-    cus_in_frame = Frame(cus_in_preview,width=1500,height=1800,bg="red")
-    cus_in_frame.pack(expand=True, fill=BOTH,  padx=10, pady=20)
-    cus_in_frame.place(x=0,y=30)
-    cus_in_canvas=Canvas(cus_in_frame,bg='grey',width=1400,height=1200,scrollregion=(0,0,1500, 1200))
-
-
-    cus_in_vertibar=Scrollbar(cus_in_frame,orient=VERTICAL)
-    cus_in_vertibar.pack(side=RIGHT,fill=Y)
-    cus_in_vertibar.config(command=cus_in_canvas.yview)
-    cus_in_canvas.config(width=1338,height=710)
-
-    cus_in_canvas.config(yscrollcommand=cus_in_vertibar.set)
-    cus_in_canvas.pack(expand=True,side=LEFT,fill=BOTH)
-    # canvas.create_rectangle(235,10,1025,1430,  outline='yellow',fill='White')
-    # canvas = Canvas(preview)
-    # canvas.place(relwidth=1, relheight=1,x=250,y=10) 
-    cus_in_paperheigth = cus_in_preview.winfo_fpixels('1m') * 297
-    cus_in_paperwidth = cus_in_preview.winfo_fpixels('1m') * 210
-    cus_in_canvas.create_rectangle(265, 20, 265+cus_in_paperwidth, 20+cus_in_paperheigth, outline='orange', fill='white')
-    cus_company = "SELECT * from company"
-    fbcursor.execute(cus_company)
-    cus_company= fbcursor.fetchone()
-
     try:
+      cus_in_preview = Toplevel()
+      cus_in_preview.title("F-Billing Revolution Invoice Report ")
+      cus_in_p2= PhotoImage(file = "images/fbicon.png")
+      cus_in_preview.iconphoto(False, cus_in_p2)
+      cus_in_preview.geometry("1800x1800+0+0")
+      cus_in_frame = Frame(cus_in_preview,width=1500,height=1800,bg="white")
+      cus_in_frame.pack(expand=True, fill=BOTH,  padx=10, pady=20)
+      cus_in_frame.place(x=0,y=30)
+      cus_in_canvas=Canvas(cus_in_frame,bg='grey',width=1400,height=1200,scrollregion=(0,0,1500, 1200))
+
+
+      cus_in_vertibar=Scrollbar(cus_in_frame,orient=VERTICAL)
+      cus_in_vertibar.pack(side=RIGHT,fill=Y)
+      cus_in_vertibar.config(command=cus_in_canvas.yview)
+      cus_in_canvas.config(width=1338,height=710)
+
+      cus_in_canvas.config(yscrollcommand=cus_in_vertibar.set)
+      cus_in_canvas.pack(expand=True,side=LEFT,fill=BOTH)
+      # canvas.create_rectangle(235,10,1025,1430,  outline='yellow',fill='White')
+      # canvas = Canvas(preview)
+      # canvas.place(relwidth=1, relheight=1,x=250,y=10) 
+      cus_in_paperheigth = cus_in_preview.winfo_fpixels('1m') * 297
+      cus_in_paperwidth = cus_in_preview.winfo_fpixels('1m') * 210
+      cus_in_canvas.create_rectangle(265, 20, 265+cus_in_paperwidth, 20+cus_in_paperheigth, outline='orange', fill='white')
+      cus_company = "SELECT * from company"
+      fbcursor.execute(cus_company)
+      cus_company= fbcursor.fetchone()
+
+      
       cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
 
       cus_main_table_sql="select * from orders where businessname=%s"
@@ -3483,13 +3503,14 @@ def mainpage():
       windowl = cus_in_canvas.create_window(300,120, anchor="nw", window=labelcmpl)
       cus_in_canvas.create_text(950,100, text="Invoices List",font=("Helvetica", 16), justify='right')
       cus_in_canvas.create_text(350,228,text=cus_company[4],fill='black',font=("Helvetica", 8), justify='left')
-      cus_in_canvas.create_text(953,220,text="Customer ID:"+str(main_tb_val[0]),fill='black',font=("Helvetica", 12), justify='right')
+      
 
       cus_sql5="select * from customer where businessname=%s"
       cus_sql5_vals=(cus_id,)
       fbcursor.execute(cus_sql5,cus_sql5_vals)
       cus_det=fbcursor.fetchone()
       cus_in_canvas.create_line(1038,235,280,235,fill="black", width=2)
+      cus_in_canvas.create_text(953,220,text="Customer ID:"+cus_det[24],fill='black',font=("Helvetica", 12), justify='right')
       
       cus_in_canvas.create_text(330,260,text="Bill To:",fill='black',font=("Helvetica", 12), justify='right')
       labelcmp=Label(cus_in_canvas,text=cus_det[4] , bg="white",anchor="nw",font=("Helvetica", 10), width=40, height=1)
@@ -3515,7 +3536,7 @@ def mainpage():
 
       # Add a Treeview widge
                           
-      cus_prv_tree=ttk.Treeview(cus_in_canvas, column=("c1", "c2","c3", "c4", "c5", "c6", "c7","c8"), show='headings', height=30, style='mystyle.Treeview')
+      cus_prv_tree=ttk.Treeview(cus_in_canvas, column=("c1", "c2","c3", "c4", "c5", "c6", "c7","c8"), show='headings', height=40, style='mystyle.Treeview')
       cus_prv_tree.column("# 1", anchor=E, stretch=NO, width=100)
       cus_prv_tree.heading("# 1", text="Invoice No")
       cus_prv_tree.column("# 2", anchor=E, stretch=NO, width=80)
@@ -3571,13 +3592,25 @@ def mainpage():
       inv_ttt=fbcursor.fetchone() 
       
       if ps_cr=="before amount":
-        cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',crc+str(inv_ttt[0]),crc+str(inv_ttt[1]),crc+str(inv_ttt[2])))
+        if inv_ttt[0] is None:
+          dtr=0
+        else:
+          dtr=inv_ttt[0]
+        if inv_ttt[1] is None:
+          dtr1=0
+        else:
+          dtr1=inv_ttt[1]
+        if inv_ttt[2] is None:
+          dtr2=0
+        else:
+          dtr2=inv_ttt[2]
+        cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',crc+str(dtr),crc+str(dtr1),crc+str(dtr2)))
       elif ps_cr=="after amount":
-        cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',str(inv_ttt[0])+crc,str(inv_ttt[1])+crc,str(inv_ttt[2])+crc))
+        cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',str(dtr)+crc,str(dtr1)+crc,str(dtr2)+crc))
       elif ps_cr=="before amount with space":
-        cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',crc+" "+str(inv_ttt[0]),crc+" "+str(inv_ttt[1]),crc+" "+str(inv_ttt[2])))
+        cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',crc+" "+str(dtr),crc+" "+str(dtr1),crc+" "+str(dtr2)))
       elif ps_cr=="after amount with space":
-        cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',str(inv_ttt[0])+" "+crc,str(inv_ttt[1])+" "+crc,str(inv_ttt[2])+" "+crc))
+        cus_prv_tree.insert('', 'end',text="1",values=('-Summary-','','','','',str(dtr)+" "+crc,str(dtr1)+" "+crc,str(dtr2)+" "+crc))
       else:
         pass
       
@@ -3590,15 +3623,17 @@ def mainpage():
                 
   #-----------------------------------------------------------------------------------print Invoice Customer
   def cus_printinvoice_customer():
-      from reportlab.pdfgen import canvas
-          # from tkdocviewer import *
-      from reportlab.lib import colors
-      from reportlab.pdfbase.ttfonts import TTFont
-      from reportlab.pdfbase import pdfmetrics
-      from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
-      from reportlab.lib.pagesizes import letter, inch
-      try:
-          pdf = canvas.Canvas("customer_Reports/CInvoice.pdf", pagesize=letter)
+    try:
+          from reportlab.pdfgen import canvas
+              # from tkdocviewer import *
+          from reportlab.lib import colors
+          from reportlab.pdfbase.ttfonts import TTFont
+          from reportlab.pdfbase import pdfmetrics
+          from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+          from reportlab.lib.pagesizes import letter, inch
+          
+          cus_id_fnm=cus_main_tree.item(cus_main_tree.focus())["values"][1]
+          pdf = canvas.Canvas("customer_Reports/"+str(cus_id_fnm)+".pdf", pagesize=letter)
           cus_id=cus_main_tree.item(cus_main_tree.focus())["values"][3]
           sqlt= 'select * from customer where businessname=%s'
           sqlt_val=(cus_id,)
@@ -3787,6 +3822,18 @@ def mainpage():
           inv_ttt=fbcursor.fetchone() 
           pdf.drawString(28,x,"__________________________________________________________________________________")
           if ps_cr=="before amount":
+                                if inv_ttt[0] is None:
+                                  dtr=0
+                                else:
+                                  dtr=inv_ttt[0]
+                                if inv_ttt[1] is None:
+                                  dtr1=0
+                                else:
+                                  dtr1=inv_ttt[1]
+                                if inv_ttt[2] is None:
+                                  dtr2=0
+                                else:
+                                  dtr2=inv_ttt[2]
                                 
                                 pdf.drawString(28,x-13,"")
                           
@@ -3794,9 +3841,9 @@ def mainpage():
                                 pdf.drawString(168,x-13,"")
                                 pdf.drawString(250,x-13,"-Summary-")
                                 pdf.drawString(315,x-13,"") 
-                                pdf.drawString(375,x-13,str(crc)+str(inv_ttt[0]))
-                                pdf.drawString(455,x-13,str(crc)+str(inv_ttt[1]))
-                                pdf.drawString(517,x-13,str(crc)+str(inv_ttt[2]))
+                                pdf.drawString(375,x-13,str(crc)+str(dtr))
+                                pdf.drawString(455,x-13,str(crc)+str(dtr1))
+                                pdf.drawString(517,x-13,str(crc)+str(dtr2))
           elif ps_cr=="after amount":
                               
                                 pdf.drawString(28,x-13,"")
@@ -3804,9 +3851,9 @@ def mainpage():
                                 pdf.drawString(168,x-13,"-Summary-")
                                 pdf.drawString(250,x-13,"")
                                 pdf.drawString(315,x-13,"") 
-                                pdf.drawString(375,x-13,str(inv_ttt[0])+str(crc))
-                                pdf.drawString(455,x-13,str(inv_ttt[1])+str(crc))
-                                pdf.drawString(517,x-13,str(inv_ttt[2])+str(crc))
+                                pdf.drawString(375,x-13,str(dtr)+str(crc))
+                                pdf.drawString(455,x-13,str(dtr1)+str(crc))
+                                pdf.drawString(517,x-13,str(dtr2)+str(crc))
           elif ps_cr=="before amount with space":
                                 pdf.drawString(28,x-13,"")
                           
@@ -3814,27 +3861,29 @@ def mainpage():
                                 pdf.drawString(168,x-13,"-Summary-")
                                 pdf.drawString(250,x-13,"")
                                 pdf.drawString(315,x-13,"") 
-                                pdf.drawString(375,x-13,str(crc)+" "+str(inv_ttt[0]))
-                                pdf.drawString(455,x-13,str(crc)+" "+str(inv_ttt[1]))
-                                pdf.drawString(517,x-13,str(crc)+" "+str(inv_ttt[2]))
+                                pdf.drawString(375,x-13,str(crc)+" "+str(dtr))
+                                pdf.drawString(455,x-13,str(crc)+" "+str(dtr1))
+                                pdf.drawString(517,x-13,str(crc)+" "+str(dtr2))
           elif ps_cr=="after amount with space":
                                 pdf.drawString(28,x-13,"")
                                 pdf.drawString(100,x-13,"")
                                 pdf.drawString(168,x-13,"-Summary-")
                                 pdf.drawString(250,x-13,"")
                                 pdf.drawString(315,x-13,"") 
-                                pdf.drawString(375,x-13,str(inv_ttt[0])+" "+str(crc))
-                                pdf.drawString(455,x-13,str(inv_ttt[1])+" "+str(crc))
-                                pdf.drawString(517,x-13,str(inv_ttt[2])+" "+str(crc))
+                                pdf.drawString(375,x-13,str(dtr)+" "+str(crc))
+                                pdf.drawString(455,x-13,str(dtr1)+" "+str(crc))
+                                pdf.drawString(517,x-13,str(dtr2)+" "+str(crc))
           else:
                           pass
 
 
           pdf.save()
-          win32api.ShellExecute(0,"","customer_Reports\CInvoice.pdf",None,".",0)
-      except:
-        pass
-
+          win32api.ShellExecute(0,"",os.getcwd()+"/customer_Reports/"+str(cus_id_fnm)+".pdf",None,".",0)
+      # except:
+    
+      #   pass
+    except:
+      pass
   #-----------------------------------------------------------------------------------Customer Sms
   def cus_customersms():
     send_SMS=Toplevel()
@@ -3963,6 +4012,7 @@ def mainpage():
       imptree.heading('cshipfax', text="cshipfax", anchor=W)
       imptree.heading('cshipcontact', text="cshipcontact", anchor=W)
       imptree.heading('specialtax1', text="specialtax1", anchor=W)
+      imptree.heading('specialtax2', text="specialtax2", anchor=W)
       imptree.heading('discountrate', text="discountrate", anchor=W)
       imptree.heading('cshipemail', text="cshipemail", anchor=W)
       imptree.heading('vatregnumber', text="vatregnumber", anchor=W)
@@ -4143,6 +4193,7 @@ def mainpage():
         cus_nxttree.heading('cshipfax', text="cshipfax", anchor=W)
         cus_nxttree.heading('cshipcontact', text="cshipcontact", anchor=W)
         cus_nxttree.heading('specialtax1', text="specialtax1", anchor=W)
+        cus_nxttree.heading('specialtax2', text="specialtax2", anchor=W)
         cus_nxttree.heading('discountrate', text="discountrate", anchor=W)
         cus_nxttree.heading('cshipemail', text="cshipemail", anchor=W)
         cus_nxttree.heading('vatregnumber', text="vatregnumber", anchor=W)
@@ -4417,14 +4468,14 @@ def mainpage():
       top.mainloop()
   #-----------------------------------------------------------------------------------Export Customer
   def cus_export_customer():
-    
+    try:
       cols = ["customerid","ccategory","cname","caddress","ctel","cfax","cemail","ccontact","cshipname","cshipaddress","cshiptel","cshipfax","cshipcontact","specialtax1","specialtax2","discountrate","cshipemail","vatregnumber","country","city", "taxexempt","cactive"] # Your column headings here
       path = filedialog.asksaveasfilename(initialdir=os.getcwd,title="Save File",filetypes=[('CSV File', '*.csv',)],defaultextension=".csv")
         
       lst = []
       with open(path, "w", newline='') as myfile:
         csvwriter = csv.writer(myfile, delimiter=',')
-        sql = 'select 	customerno ,category,businessname,businessaddress,cptelno,cpfax,cpemail,	contactperson,shipname,shipaddress,shipcptelno,shipcpfax,shipcontactperson,specifictax1,specifictax2,discount,shipcpemail,country,country,city, taxexempt,status from customer'
+        sql = 'select 	customerno ,category,businessname,businessaddress,cptelno,cpfax,cpemail,	contactperson,shipname,shipaddress,shipcptelno,shipcpfax,shipcontactperson,specifictax1,specifictax2,discount,shipcpemail,vatregnumber,country,city, taxexempt,status from customer'
           
         fbcursor.execute(sql)
         pandsdata = fbcursor.fetchall()
@@ -4435,6 +4486,8 @@ def mainpage():
         lst.insert(0,cols)
         for row in lst:
             csvwriter.writerow(row)
+    except:
+      pass
   #-----------------------------------------------------------------------------------Search Customer
   def cus_search_customers():
       def find_cus_row():
